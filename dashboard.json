@@ -1,0 +1,37 @@
+{
+    "reports": [
+        {
+            "headline": "Regional Instability Reported",
+            "city": "Tehran, Iran",
+            "lat": 35.6892,
+            "lon": 51.3890,
+            "severity": 5,
+            "sources": [
+                {
+                    "name": "Reuters",
+                    "url": "https://www.reuters.com",
+                    "factuality": "Very High"
+                },
+                {
+                    "name": "Associated Press",
+                    "url": "https://apnews.com",
+                    "factuality": "Very High"
+                }
+            ]
+        },
+        {
+            "headline": "Maritime Drill Observed",
+            "city": "Bushehr, Iran",
+            "lat": 28.9234,
+            "lon": 50.8203,
+            "severity": 3,
+            "sources": [
+                {
+                    "name": "Al Jazeera",
+                    "url": "https://www.aljazeera.com",
+                    "factuality": "High"
+                }
+            ]
+        }
+    ]
+}
