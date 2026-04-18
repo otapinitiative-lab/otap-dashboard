@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="img-src * data: blob:; default-src 'self' 'unsafe-inline' 'unsafe-eval' *;">
 <title>OTAP DASHBOARD</title>
 <style>
 /* ═══════════════════════════════════════════════════════════════
@@ -563,10 +564,10 @@ html, body {
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: #050707;
+  background: #0a0f14;  /* dark ocean blue — visible even when tiles fail */
 }
 
-#leaflet-map { width: 100%; height: 100%; }
+#leaflet-map { width: 100%; height: 100%; background: #0a0f14; }
 
 #coord-hover {
   position: absolute;
@@ -1131,7 +1132,8 @@ html, body {
 .unfurl-item:hover { background: rgba(255,255,255,0.04); color: var(--otap-white); }
 .unfurl-theatre:hover { color: var(--accent); }
 .unfurl-mode:hover { color: var(--otap-green); }
-.unfurl-theme { color: var(--accent); }
+.unfurl-sync { color: rgba(249,249,249,0.4); }
+.unfurl-sync:hover { color: var(--otap-white); }
 
 /* Access denied popup */
 #access-denied-popup {
@@ -1274,7 +1276,7 @@ html, body {
 }
 
 /* Leaflet overrides */
-.leaflet-container { background: #050707 !important; }
+.leaflet-container { background: #0a0f14 !important; }
 .leaflet-tile { filter: brightness(0.75) saturate(0.5) hue-rotate(180deg); }
 .leaflet-control-attribution { display: none !important; }
 .leaflet-control-zoom {
@@ -2717,13 +2719,12 @@ html, body {
 
     <!-- Bottom -->
     <div class="sb-bottom">
-      <button class="bottom-btn mode-btn" id="btn-mode">&#62; Mode</button>
+      <button class="bottom-btn mode-btn" id="btn-mode">&#62; Theatre</button>
       <button class="bottom-btn ctry-btn" id="btn-countries">Countries</button>
       <button class="bottom-btn add-btn" id="btn-add-src">+</button>
       <div id="mode-unfurl">
-        <div class="unfurl-item unfurl-theatre" id="unfurl-theatre">&#60; Theatre</div>
-        <div class="unfurl-item unfurl-mode" id="unfurl-mode">&#60; Mode Select</div>
-        <div class="unfurl-item unfurl-theme" id="unfurl-theme">&#60; Theme: <span id="theme-label">Tactical</span> &#62;</div>
+        <div class="unfurl-item unfurl-theatre" id="unfurl-theatre">&#60; Change Theatre</div>
+        <div class="unfurl-item unfurl-sync" id="unfurl-sync">&#8635; Sync Intel</div>
       </div>
     </div>
 
@@ -3232,7 +3233,8 @@ function applyThemeClass(cls) {
   document.documentElement.classList.add(cls);
   g.currentThemeCls = cls;
   const t = SITE_THEME_MAP[cls];
-  document.getElementById('theme-label').textContent = t ? t.dashName : cls;
+  const themeLabelEl = document.getElementById('theme-label');
+  if (themeLabelEl) themeLabelEl.textContent = t ? t.dashName : cls;
   // Update border layer colour
   if (g.bordersLayer && g.leafletMap) {
     const c = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
@@ -3530,10 +3532,33 @@ function initMap() {
     maxBounds:[[-85,-Infinity],[85,Infinity]],
   });
 
-  // CartoDB Dark Matter — stronger land/water contrast than dark_all
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_matter/{z}/{x}/{y}{r}.png',{
-    subdomains:'abcd', maxZoom:19,
-  }).addTo(g.leafletMap);
+  // Use Stamen Toner as primary (reliable in iframe, strong contrast)
+  // with CartoDB dark_all as fallback
+  const tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+
+  const tileLayer = L.tileLayer(tileUrl, {
+    subdomains: 'abcd',
+    maxZoom: 19,
+    crossOrigin: true,
+  });
+
+  let tileErrorCount = 0;
+  tileLayer.on('tileerror', () => {
+    tileErrorCount++;
+    // If multiple tiles fail, try a different provider
+    if (tileErrorCount === 3 && !g._tileFallbackTriggered) {
+      g._tileFallbackTriggered = true;
+      console.warn('[MAP] Primary tiles failing, switching to fallback provider');
+      g.leafletMap.removeLayer(tileLayer);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        crossOrigin: true,
+        opacity: 0.15, // keep dark feel
+      }).addTo(g.leafletMap);
+    }
+  });
+
+  tileLayer.addTo(g.leafletMap);
 
   g.leafletMap.on('mousemove', e => {
     const el = document.getElementById('coord-hover');
@@ -3885,6 +3910,18 @@ async function startSync() {
       data=await (await fetch('dashboard.json')).json();
     }
     parseReports(data);
+
+    // Admin OSINT key relay — if server returns osint_keys, store them
+    // (only if operator hasn't set their own keys locally already)
+    if (data.osint_keys && typeof data.osint_keys === 'object') {
+      for (const [k, v] of Object.entries(data.osint_keys)) {
+        if (v && !osintGetKey(k)) {  // don't overwrite operator's own keys
+          osintSetKey(k, v);
+        }
+      }
+      updateOsintKeyStatuses();
+    }
+
     g.allPins=getPinsFromReports();
     g.allCountries=[...new Set(g.allPins.filter(p=>p.country&&p.country!=='MARITIME').map(p=>p.country))].sort();
     rebuildPins(); renderCountriesTab(); updateCtryStatus(); renderIntelTab();
@@ -3940,18 +3977,19 @@ document.getElementById('btn-countries').addEventListener('click',()=>{
 document.getElementById('btn-mode').addEventListener('click',()=>{
   g.modeMenuOpen=!g.modeMenuOpen;
   document.getElementById('mode-unfurl').style.display=g.modeMenuOpen?'block':'none';
-  document.getElementById('btn-mode').textContent=g.modeMenuOpen?'v Mode':'> Mode';
+  document.getElementById('btn-mode').textContent=g.modeMenuOpen?'v Theatre':'> Theatre';
 });
 document.getElementById('unfurl-theatre').addEventListener('click',()=>{
-  g.modeMenuOpen=false; document.getElementById('mode-unfurl').style.display='none';
-  document.getElementById('btn-mode').textContent='> Mode'; showScreen('region');
+  g.modeMenuOpen=false;
+  document.getElementById('mode-unfurl').style.display='none';
+  document.getElementById('btn-mode').textContent='> Theatre';
+  showScreen('region');
 });
-document.getElementById('unfurl-mode').addEventListener('click',()=>{
-  g.modeMenuOpen=false; document.getElementById('mode-unfurl').style.display='none';
-  document.getElementById('btn-mode').textContent='> Mode'; showScreen('mode');
-});
-document.getElementById('unfurl-theme').addEventListener('click',()=>{
-  cycleTheme();
+document.getElementById('unfurl-sync').addEventListener('click',()=>{
+  g.modeMenuOpen=false;
+  document.getElementById('mode-unfurl').style.display='none';
+  document.getElementById('btn-mode').textContent='> Theatre';
+  if(!g.isSyncing) startSync();
 });
 
 document.getElementById('btn-add-src').addEventListener('click',()=>{
@@ -3994,7 +4032,7 @@ document.addEventListener('click',e=>{
   if(g.modeMenuOpen&&!e.target.closest('#mode-unfurl')&&!e.target.closest('#btn-mode')){
     g.modeMenuOpen=false;
     document.getElementById('mode-unfurl').style.display='none';
-    document.getElementById('btn-mode').textContent='> Mode';
+    document.getElementById('btn-mode').textContent='> Theatre';
   }
 });
 
@@ -4723,9 +4761,13 @@ document.querySelectorAll('.mode-card').forEach(card => {
     } else if (g.appMode === 'osint') {
       showScreen('osint');
       updateOsintKeyStatuses();
+      const ep = getGemmaEndpoint();
+      if (!ep) setTimeout(showGemmaPopup, 1200);
     } else if (g.appMode === 'workdesk') {
       showScreen('workdesk');
       initWorkDesk();
+      const ep = getGemmaEndpoint();
+      if (!ep) setTimeout(showGemmaPopup, 1200);
     } else {
       enterDashboard();
     }
@@ -5161,7 +5203,7 @@ function renderSheet() {
     </div>`;
     body.appendChild(zone);
     if (info) info.textContent = '';
-    wirePasteZone();
+    wirePasteZone();  // always wire after inserting zone
     return;
   }
 
