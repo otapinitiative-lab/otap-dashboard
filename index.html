@@ -6,10 +6,10 @@
 <title>OTAP DASHBOARD</title>
 <style>
 /* ═══════════════════════════════════════════════════════════════
-   OTAP DASHBOARD — Phase 2 Web Build
+   OTAP DASHBOARD — Phase 3 Web Build
    Hosted: https://otapinitiative-lab.github.io/otap-dashboard/
-   Phase 2: Pin distinction, operator notes, multi-colour mode,
-   coord hover polish, geolocation refinement, toast system
+   Phase 3: Full OSINT mode — 5 API integrations, key management,
+   scrollable results panel, dark web placeholders, security tier
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── SITE CSS VARIABLE SYSTEM (mirrors Squarespace custom CSS) ── */
@@ -1478,7 +1478,641 @@ html, body {
   display: none;
 }
 
-/* ── SOURCE CARD — PRIMARY badge ── */
+/* ═══════════════════════════════
+   PHASE 3 — OSINT MODE
+   ═══════════════════════════════ */
+
+/* ── OSINT SCREEN LAYOUT ── */
+#screen-osint {
+  background: var(--otap-navy);
+  flex-direction: row;
+  overflow: hidden;
+}
+
+/* Left input sidebar — 290px matching C++ original */
+.osint-sidebar {
+  width: 290px;
+  flex-shrink: 0;
+  background: var(--otap-navy-mid);
+  border-right: 0.5px solid var(--otap-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.osint-sb-header {
+  padding: 16px 20px 12px;
+  border-bottom: 0.5px solid var(--otap-border);
+  flex-shrink: 0;
+}
+
+.osint-sb-mode {
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.osint-sb-title {
+  font-family: Georgia, serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--otap-white);
+}
+
+.osint-sb-sub {
+  font-size: 10px;
+  color: rgba(249,249,249,0.25);
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+
+/* Input fields */
+.osint-inputs {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 20px;
+  scrollbar-width: none;
+}
+
+.osint-inputs::-webkit-scrollbar { display: none; }
+
+.osint-field {
+  margin-bottom: 14px;
+}
+
+.osint-field-label {
+  font-size: 9px;
+  color: rgba(249,249,249,0.25);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.osint-field-tag {
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  border: 0.5px solid var(--accent-dim);
+  border-radius: 2px;
+  padding: 1px 4px;
+}
+
+.osint-input {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid var(--otap-border);
+  border-radius: 2px;
+  padding: 9px 10px;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--otap-white);
+  outline: none;
+  transition: border-color 0.15s;
+  letter-spacing: 0.02em;
+}
+
+.osint-input:focus { border-color: var(--accent); }
+.osint-input::placeholder { color: rgba(249,249,249,0.15); }
+
+.osint-section-divider {
+  height: 0.5px;
+  background: var(--otap-border);
+  margin: 10px 0 14px;
+}
+
+/* Bottom action buttons — pinned */
+.osint-sb-bottom {
+  padding: 12px 20px;
+  border-top: 0.5px solid var(--otap-border);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.osint-run-btn {
+  width: 100%;
+  padding: 11px;
+  background: var(--accent);
+  border: none;
+  border-radius: 2px;
+  font-family: var(--font);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--otap-navy);
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-weight: 700;
+}
+
+.osint-run-btn:hover:not(:disabled) { opacity: 0.85; }
+.osint-run-btn:disabled {
+  background: rgba(255,255,255,0.06);
+  color: rgba(249,249,249,0.2);
+  cursor: default;
+}
+
+.osint-run-btn.running {
+  background: rgba(255,255,255,0.06);
+  color: var(--accent);
+  cursor: default;
+  animation: osint-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes osint-pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+.osint-keys-btn {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: 0.5px solid var(--otap-border);
+  border-radius: 2px;
+  font-family: var(--font);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(249,249,249,0.3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.osint-keys-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.osint-back-btn {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: 0.5px solid rgba(255,255,255,0.08);
+  border-radius: 2px;
+  font-family: var(--font);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(249,249,249,0.2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.osint-back-btn:hover { border-color: rgba(255,255,255,0.2); color: rgba(249,249,249,0.5); }
+
+/* ── OSINT MAIN RESULTS PANEL ── */
+.osint-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--otap-navy);
+}
+
+.osint-topbar {
+  padding: 12px 24px;
+  border-bottom: 0.5px solid var(--otap-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.osint-topbar-subject {
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--otap-white);
+}
+
+.osint-topbar-meta {
+  font-size: 10px;
+  color: rgba(249,249,249,0.2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.osint-topbar-wc {
+  display: flex;
+  gap: 5px;
+}
+
+.osint-results {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.osint-results::-webkit-scrollbar { width: 3px; }
+.osint-results::-webkit-scrollbar-track { background: transparent; }
+.osint-results::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+
+/* Placeholder / idle state */
+.osint-idle {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.osint-idle-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse-accent 2s infinite;
+}
+
+.osint-idle-text {
+  font-size: 12px;
+  color: rgba(249,249,249,0.2);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.8;
+}
+
+/* Result cards */
+.osint-card {
+  background: var(--otap-navy-mid);
+  border: 0.5px solid var(--otap-border);
+  border-left: 2px solid var(--otap-border);
+  border-radius: 2px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: border-left-color 0.2s;
+}
+
+.osint-card.has-data { border-left-color: var(--accent); }
+.osint-card.has-alert { border-left-color: #e05c5c; }
+.osint-card.loading { border-left-color: rgba(249,249,249,0.1); }
+.osint-card.no-key { border-left-color: rgba(249,249,249,0.06); opacity: 0.6; }
+
+.osint-card-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 0.5px solid var(--otap-border);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.osint-card-header:hover { background: rgba(255,255,255,0.02); }
+
+.osint-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.osint-card-icon {
+  width: 28px; height: 28px;
+  border-radius: 2px;
+  background: var(--accent-dim);
+  border: 0.5px solid rgba(var(--accent-rgb),0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.osint-card-title {
+  font-size: 13px;
+  color: var(--otap-white);
+  letter-spacing: 0.02em;
+  margin-bottom: 2px;
+}
+
+.osint-card-trigger {
+  font-size: 10px;
+  color: rgba(249,249,249,0.25);
+  letter-spacing: 0.08em;
+}
+
+.osint-card-status {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+  border: 0.5px solid;
+}
+
+.osint-card-status.idle { color: rgba(249,249,249,0.2); border-color: rgba(249,249,249,0.08); }
+.osint-card-status.loading { color: var(--accent); border-color: var(--accent-dim); animation: osint-pulse 1s infinite; }
+.osint-card-status.ok { color: var(--otap-green); border-color: rgba(122,159,106,0.3); }
+.osint-card-status.alert { color: #e05c5c; border-color: rgba(224,92,92,0.3); }
+.osint-card-status.no-key { color: rgba(249,249,249,0.15); border-color: rgba(255,255,255,0.05); }
+.osint-card-status.error { color: #c5a267; border-color: rgba(197,162,103,0.3); }
+
+.osint-card-body {
+  padding: 14px 16px;
+  display: none;
+}
+
+.osint-card-body.open { display: block; }
+
+/* Result data rows */
+.osint-data-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 7px 0;
+  border-bottom: 0.5px solid rgba(255,255,255,0.04);
+  gap: 16px;
+}
+
+.osint-data-row:last-child { border-bottom: none; }
+
+.osint-data-key {
+  font-size: 10px;
+  color: rgba(249,249,249,0.25);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  padding-top: 1px;
+  min-width: 100px;
+}
+
+.osint-data-val {
+  font-size: 12px;
+  color: var(--otap-white);
+  text-align: right;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.osint-data-val.alert { color: #e05c5c; }
+.osint-data-val.ok { color: var(--otap-green); }
+.osint-data-val.dim { color: rgba(249,249,249,0.35); }
+
+/* Breach list */
+.osint-breach-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.osint-breach-item {
+  background: rgba(224,92,92,0.06);
+  border: 0.5px solid rgba(224,92,92,0.2);
+  border-radius: 2px;
+  padding: 8px 12px;
+}
+
+.osint-breach-name {
+  font-size: 12px;
+  color: #e05c5c;
+  margin-bottom: 3px;
+}
+
+.osint-breach-meta {
+  font-size: 10px;
+  color: rgba(249,249,249,0.3);
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+}
+
+/* Tag pills */
+.osint-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.osint-tag {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(249,249,249,0.4);
+  border: 0.5px solid rgba(255,255,255,0.1);
+  border-radius: 2px;
+  padding: 2px 6px;
+}
+
+.osint-tag.accent { color: var(--accent); border-color: var(--accent-dim); }
+.osint-tag.alert { color: #e05c5c; border-color: rgba(224,92,92,0.3); }
+
+/* No-key placeholder in card body */
+.osint-no-key-msg {
+  font-size: 11px;
+  color: rgba(249,249,249,0.2);
+  letter-spacing: 0.06em;
+  line-height: 1.7;
+  padding: 4px 0;
+}
+
+.osint-no-key-msg a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 0.5px solid var(--accent-dim);
+}
+
+/* ── API KEY MANAGEMENT PANEL ── */
+#osint-keys-panel {
+  position: absolute;
+  inset: 0;
+  background: var(--otap-navy);
+  z-index: 200;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.osint-keys-header {
+  padding: 16px 24px;
+  border-bottom: 0.5px solid var(--otap-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.osint-keys-title {
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--otap-white);
+}
+
+.osint-keys-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.osint-key-group {
+  margin-bottom: 20px;
+  background: var(--otap-navy-mid);
+  border: 0.5px solid var(--otap-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.osint-key-group-header {
+  padding: 10px 14px;
+  border-bottom: 0.5px solid var(--otap-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.osint-key-group-name {
+  font-size: 12px;
+  color: var(--otap-white);
+  letter-spacing: 0.04em;
+}
+
+.osint-key-group-status {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.osint-key-group-status.configured { color: var(--otap-green); }
+.osint-key-group-status.missing { color: rgba(249,249,249,0.2); }
+
+.osint-key-group-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.osint-key-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.osint-key-input {
+  flex: 1;
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid var(--otap-border);
+  border-radius: 2px;
+  padding: 8px 10px;
+  font-family: var(--font);
+  font-size: 11px;
+  color: var(--otap-green);
+  outline: none;
+  transition: border-color 0.15s;
+  letter-spacing: 0.04em;
+}
+
+.osint-key-input:focus { border-color: var(--accent); }
+.osint-key-input::placeholder { color: rgba(249,249,249,0.12); }
+
+.osint-key-save {
+  padding: 8px 12px;
+  background: transparent;
+  border: 0.5px solid var(--accent-dim);
+  border-radius: 2px;
+  font-family: var(--font);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.osint-key-save:hover { background: var(--accent); color: var(--otap-navy); }
+
+.osint-key-link {
+  font-size: 10px;
+  color: rgba(249,249,249,0.2);
+  letter-spacing: 0.06em;
+}
+
+.osint-key-link a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 0.5px solid var(--accent-dim);
+  transition: opacity 0.15s;
+}
+
+.osint-key-link a:hover { opacity: 0.7; }
+
+/* Security tier banner */
+.osint-security-banner {
+  margin-bottom: 20px;
+  background: var(--otap-navy-mid);
+  border: 0.5px solid var(--otap-border);
+  border-left: 2px solid var(--otap-green);
+  border-radius: 2px;
+  padding: 14px 16px;
+}
+
+.osint-security-title {
+  font-size: 10px;
+  color: var(--otap-green);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.osint-security-items {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.osint-security-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: rgba(249,249,249,0.45);
+  line-height: 1.5;
+}
+
+.osint-security-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--otap-green);
+  flex-shrink: 0;
+}
+
+/* Search results for web presence */
+.osint-web-result {
+  padding: 8px 0;
+  border-bottom: 0.5px solid rgba(255,255,255,0.04);
+}
+
+.osint-web-result:last-child { border-bottom: none; }
+
+.osint-web-result-title {
+  font-size: 12px;
+  color: var(--accent);
+  margin-bottom: 2px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.osint-web-result-title:hover { opacity: 0.75; }
+
+.osint-web-result-url {
+  font-size: 10px;
+  color: rgba(249,249,249,0.2);
+  margin-bottom: 3px;
+  word-break: break-all;
+}
+
+.osint-web-result-snippet {
+  font-size: 11px;
+  color: rgba(249,249,249,0.4);
+  line-height: 1.6;
+}
+
 .source-primary-badge {
   display: inline-block;
   font-size: 8px;
@@ -1620,6 +2254,211 @@ html, body {
 
   <!-- Toast -->
   <div id="toast"></div>
+
+<!-- OSINT SCREEN -->
+<div id="screen-osint" class="screen">
+
+  <!-- API Key Management Panel (overlay) -->
+  <div id="osint-keys-panel">
+    <div class="osint-keys-header">
+      <div class="osint-keys-title">API Key Management</div>
+      <div class="sb-wc">
+        <button class="wc-btn" id="osint-keys-close">&#215;</button>
+      </div>
+    </div>
+    <div class="osint-keys-body">
+
+      <!-- Security tier -->
+      <div class="osint-security-banner">
+        <div class="osint-security-title">Security Architecture</div>
+        <div class="osint-security-items">
+          <div class="osint-security-item"><div class="osint-security-dot"></div>All API calls proxied through Apps Script — keys never exposed to browser</div>
+          <div class="osint-security-item"><div class="osint-security-dot"></div>Keys stored encrypted in Google PropertiesService server-side</div>
+          <div class="osint-security-item"><div class="osint-security-dot"></div>Requests routed through Google infrastructure (non-US routing: configure Apps Script region)</div>
+          <div class="osint-security-item"><div class="osint-security-dot"></div>Rate limiting and session validation enforced server-side</div>
+        </div>
+      </div>
+
+      <!-- HaveIBeenPwned -->
+      <div class="osint-key-group">
+        <div class="osint-key-group-header">
+          <div class="osint-key-group-name">🔓 HaveIBeenPwned v3</div>
+          <div class="osint-key-group-status" id="key-status-hibp">Not configured</div>
+        </div>
+        <div class="osint-key-group-body">
+          <div class="osint-key-row">
+            <input class="osint-key-input" id="key-hibp" type="password" placeholder="hibp-api-key">
+            <button class="osint-key-save" data-key="hibp">Save</button>
+          </div>
+          <div class="osint-key-link">Get key: <a href="https://haveibeenpwned.com/API/Key" target="_blank" rel="noopener">haveibeenpwned.com/API/Key</a> — $3.50/mo</div>
+        </div>
+      </div>
+
+      <!-- Shodan -->
+      <div class="osint-key-group">
+        <div class="osint-key-group-header">
+          <div class="osint-key-group-name">📡 Shodan</div>
+          <div class="osint-key-group-status" id="key-status-shodan">Not configured</div>
+        </div>
+        <div class="osint-key-group-body">
+          <div class="osint-key-row">
+            <input class="osint-key-input" id="key-shodan" type="password" placeholder="shodan-api-key">
+            <button class="osint-key-save" data-key="shodan">Save</button>
+          </div>
+          <div class="osint-key-link">Get key: <a href="https://account.shodan.io/" target="_blank" rel="noopener">account.shodan.io</a> — Free tier available</div>
+        </div>
+      </div>
+
+      <!-- Hunter.io -->
+      <div class="osint-key-group">
+        <div class="osint-key-group-header">
+          <div class="osint-key-group-name">🎯 Hunter.io</div>
+          <div class="osint-key-group-status" id="key-status-hunter">Not configured</div>
+        </div>
+        <div class="osint-key-group-body">
+          <div class="osint-key-row">
+            <input class="osint-key-input" id="key-hunter" type="password" placeholder="hunter-api-key">
+            <button class="osint-key-save" data-key="hunter">Save</button>
+          </div>
+          <div class="osint-key-link">Get key: <a href="https://hunter.io/api" target="_blank" rel="noopener">hunter.io/api</a> — Free tier: 25 req/mo</div>
+        </div>
+      </div>
+
+      <!-- NumVerify -->
+      <div class="osint-key-group">
+        <div class="osint-key-group-header">
+          <div class="osint-key-group-name">📞 NumVerify</div>
+          <div class="osint-key-group-status" id="key-status-numverify">Not configured</div>
+        </div>
+        <div class="osint-key-group-body">
+          <div class="osint-key-row">
+            <input class="osint-key-input" id="key-numverify" type="password" placeholder="numverify-api-key">
+            <button class="osint-key-save" data-key="numverify">Save</button>
+          </div>
+          <div class="osint-key-link">Get key: <a href="https://numverify.com/" target="_blank" rel="noopener">numverify.com</a> — Free tier: 100 req/mo</div>
+        </div>
+      </div>
+
+      <!-- Google CSE -->
+      <div class="osint-key-group">
+        <div class="osint-key-group-header">
+          <div class="osint-key-group-name">🔍 Google Custom Search</div>
+          <div class="osint-key-group-status" id="key-status-google">Not configured</div>
+        </div>
+        <div class="osint-key-group-body">
+          <div class="osint-key-row">
+            <input class="osint-key-input" id="key-google-api" type="password" placeholder="google-api-key">
+            <button class="osint-key-save" data-key="google_api">Save API Key</button>
+          </div>
+          <div class="osint-key-row">
+            <input class="osint-key-input" id="key-google-cx" type="text" placeholder="custom-search-engine-id (cx)">
+            <button class="osint-key-save" data-key="google_cx">Save CX</button>
+          </div>
+          <div class="osint-key-link">Get key: <a href="https://developers.google.com/custom-search/v1/overview" target="_blank" rel="noopener">Google CSE docs</a> — 100 free queries/day</div>
+        </div>
+      </div>
+
+      <!-- Dark web (placeholder) -->
+      <div class="osint-key-group" style="opacity:0.5">
+        <div class="osint-key-group-header">
+          <div class="osint-key-group-name">🌐 Dark Web APIs</div>
+          <div class="osint-key-group-status missing">Coming in Phase 4</div>
+        </div>
+        <div class="osint-key-group-body">
+          <div class="osint-key-link" style="color:rgba(249,249,249,0.3)">IntelX, Ahmia, and OnionScan integration planned. Requires separate security review.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Left sidebar -->
+  <div class="osint-sidebar">
+    <div class="osint-sb-header">
+      <div class="osint-sb-mode">[ OSINT MODE ]</div>
+      <div class="osint-sb-title">OTAP Dashboard</div>
+      <div class="osint-sb-sub">Digital Footprint Analysis</div>
+    </div>
+
+    <div class="osint-inputs">
+      <div class="osint-field">
+        <div class="osint-field-label">
+          Email
+          <span class="osint-field-tag">HIBP · Hunter · Shodan</span>
+        </div>
+        <input class="osint-input" id="osint-email" type="email" placeholder="target@domain.com">
+      </div>
+
+      <div class="osint-field">
+        <div class="osint-field-label">
+          IP Address
+          <span class="osint-field-tag">Shodan</span>
+        </div>
+        <input class="osint-input" id="osint-ip" type="text" placeholder="192.168.0.1">
+      </div>
+
+      <div class="osint-field">
+        <div class="osint-field-label">
+          Phone Number
+          <span class="osint-field-tag">NumVerify</span>
+        </div>
+        <input class="osint-input" id="osint-phone" type="text" placeholder="+44 7911 123456">
+      </div>
+
+      <div class="osint-section-divider"></div>
+
+      <div class="osint-field">
+        <div class="osint-field-label">
+          Name / Username
+          <span class="osint-field-tag">Google CSE</span>
+        </div>
+        <input class="osint-input" id="osint-name" type="text" placeholder="John Smith / @handle">
+      </div>
+
+      <div class="osint-field">
+        <div class="osint-field-label">
+          Domain
+          <span class="osint-field-tag">Hunter · Shodan</span>
+        </div>
+        <input class="osint-input" id="osint-domain" type="text" placeholder="example.com">
+      </div>
+    </div>
+
+    <div class="osint-sb-bottom">
+      <button class="osint-run-btn" id="osint-run-btn">Run OSINT</button>
+      <button class="osint-keys-btn" id="osint-keys-btn">⚙ Manage API Keys</button>
+      <button class="osint-back-btn" id="osint-back-btn">← Back to Mode Select</button>
+    </div>
+  </div>
+
+  <!-- Main results panel -->
+  <div class="osint-main">
+    <div class="osint-topbar">
+      <div>
+        <div class="osint-topbar-subject" id="osint-subject-label">Enter subject details to begin</div>
+        <div class="osint-topbar-meta" id="osint-meta-label">OTAP OSINT ENGINE v1.0</div>
+      </div>
+      <div class="osint-topbar-wc">
+        <div class="wc-btn" id="osint-btn-minimize" title="Minimise">—</div>
+        <div class="wc-btn" id="osint-btn-fullscreen" title="Fullscreen">&#9633;</div>
+        <div class="wc-btn close" id="osint-btn-close" title="Close">&#215;</div>
+      </div>
+    </div>
+
+    <div class="osint-results" id="osint-results">
+      <!-- Idle state -->
+      <div class="osint-idle" id="osint-idle">
+        <div class="osint-idle-dot"></div>
+        <div class="osint-idle-text">
+          Enter at least one field and click Run OSINT<br>
+          Results appear here as each API responds
+        </div>
+      </div>
+      <!-- Result cards injected here by JS -->
+    </div>
+  </div>
+
+</div>
 
   <div id="sidebar">
     <div class="sb-header">
@@ -1945,8 +2784,14 @@ function doLogin() {
 document.querySelectorAll('.mode-card').forEach(card => {
   card.addEventListener('click', () => {
     g.appMode = card.dataset.mode;
-    if (g.appMode === 'map') { showScreen('region'); }
-    else { enterDashboard(); }
+    if (g.appMode === 'map') {
+      showScreen('region');
+    } else if (g.appMode === 'osint') {
+      showScreen('osint');
+      updateOsintKeyStatuses();
+    } else {
+      enterDashboard();
+    }
   });
 });
 
@@ -2549,7 +3394,523 @@ document.getElementById('sb-status').addEventListener('click',()=>{ if(!g.isSync
 // ── UTIL ──────────────────────────────────────────────────────────
 function esc(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-// ── PHASE 2 — OPERATOR NOTES ─────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+//  PHASE 3 — OSINT ENGINE
+// ═══════════════════════════════════════════════════════════════
+
+// ── API KEY STORAGE (localStorage, keys proxied server-side) ────
+const OSINT_KEY_NAMES = ['hibp','shodan','hunter','numverify','google_api','google_cx'];
+
+function osintGetKey(name) {
+  try { return localStorage.getItem('otap_osint_' + name) || ''; } catch(e) { return ''; }
+}
+
+function osintSetKey(name, val) {
+  try {
+    if (val) localStorage.setItem('otap_osint_' + name, val);
+    else localStorage.removeItem('otap_osint_' + name);
+  } catch(e) {}
+}
+
+function osintHasKey(name) { return !!osintGetKey(name); }
+
+function updateOsintKeyStatuses() {
+  const map = {
+    hibp:       { ids:['hibp'],               statusId:'key-status-hibp',       inputId:'key-hibp'       },
+    shodan:     { ids:['shodan'],             statusId:'key-status-shodan',     inputId:'key-shodan'     },
+    hunter:     { ids:['hunter'],             statusId:'key-status-hunter',     inputId:'key-hunter'     },
+    numverify:  { ids:['numverify'],          statusId:'key-status-numverify',  inputId:'key-numverify'  },
+    google:     { ids:['google_api','google_cx'], statusId:'key-status-google', inputId:'key-google-api' },
+  };
+  for (const [group, cfg] of Object.entries(map)) {
+    const hasAll = cfg.ids.every(k => osintHasKey(k));
+    const statusEl = document.getElementById(cfg.statusId);
+    if (statusEl) {
+      statusEl.textContent = hasAll ? 'Configured ✓' : 'Not configured';
+      statusEl.className = 'osint-key-group-status ' + (hasAll ? 'configured' : 'missing');
+    }
+    // Pre-fill inputs with masked value if set
+    if (cfg.inputId) {
+      const input = document.getElementById(cfg.inputId);
+      if (input) {
+        const val = osintGetKey(cfg.ids[0]);
+        input.value = val ? '••••••••' + val.slice(-4) : '';
+        input.dataset.saved = val ? '1' : '';
+      }
+    }
+  }
+  // Google CX separately
+  const cxInput = document.getElementById('key-google-cx');
+  if (cxInput) {
+    const cx = osintGetKey('google_cx');
+    cxInput.value = cx || '';
+  }
+}
+
+// Key save button handlers
+document.querySelectorAll('.osint-key-save').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const keyName = btn.dataset.key;
+    let inputEl;
+    if (keyName === 'hibp')       inputEl = document.getElementById('key-hibp');
+    if (keyName === 'shodan')     inputEl = document.getElementById('key-shodan');
+    if (keyName === 'hunter')     inputEl = document.getElementById('key-hunter');
+    if (keyName === 'numverify')  inputEl = document.getElementById('key-numverify');
+    if (keyName === 'google_api') inputEl = document.getElementById('key-google-api');
+    if (keyName === 'google_cx')  inputEl = document.getElementById('key-google-cx');
+    if (!inputEl) return;
+    const val = inputEl.value.trim();
+    // Don't overwrite with masked value
+    if (val && !val.startsWith('••')) {
+      osintSetKey(keyName, val);
+      showToast(`${keyName} key saved`);
+      updateOsintKeyStatuses();
+    }
+  });
+});
+
+// Keys panel open/close
+document.getElementById('osint-keys-btn').addEventListener('click', () => {
+  document.getElementById('osint-keys-panel').style.display = 'flex';
+  updateOsintKeyStatuses();
+});
+
+document.getElementById('osint-keys-close').addEventListener('click', () => {
+  document.getElementById('osint-keys-panel').style.display = 'none';
+  updateOsintKeyStatuses();
+});
+
+// Back to mode select
+document.getElementById('osint-back-btn').addEventListener('click', () => {
+  showScreen('mode');
+});
+
+// OSINT window controls
+document.getElementById('osint-btn-minimize').addEventListener('click', () => {
+  // Shrink sidebar as visual feedback in browser context
+  document.querySelector('.osint-sidebar').style.transform = 'translateX(-110%)';
+  setTimeout(() => document.querySelector('.osint-sidebar').style.transform = '', 1500);
+});
+document.getElementById('osint-btn-fullscreen').addEventListener('click', () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+  else document.exitFullscreen?.();
+});
+document.getElementById('osint-btn-close').addEventListener('click', () => {
+  if (confirm('Close OTAP Dashboard?')) window.close();
+});
+
+// ── OSINT CARD DEFINITIONS ──────────────────────────────────────
+const OSINT_CARDS = [
+  {
+    id: 'hibp',
+    icon: '🔓',
+    title: 'Breach Exposure',
+    subtitle: 'HaveIBeenPwned v3',
+    trigger: 'email',
+    keyRequired: ['hibp'],
+    getAcquireUrl: () => 'https://haveibeenpwned.com/API/Key',
+  },
+  {
+    id: 'shodan',
+    icon: '📡',
+    title: 'IP / Device Footprint',
+    subtitle: 'Shodan',
+    trigger: 'ip or domain',
+    keyRequired: ['shodan'],
+    getAcquireUrl: () => 'https://account.shodan.io/',
+  },
+  {
+    id: 'hunter',
+    icon: '🎯',
+    title: 'Email Intel',
+    subtitle: 'Hunter.io',
+    trigger: 'email or domain',
+    keyRequired: ['hunter'],
+    getAcquireUrl: () => 'https://hunter.io/api',
+  },
+  {
+    id: 'numverify',
+    icon: '📞',
+    title: 'Phone Intel',
+    subtitle: 'NumVerify',
+    trigger: 'phone',
+    keyRequired: ['numverify'],
+    getAcquireUrl: () => 'https://numverify.com/',
+  },
+  {
+    id: 'google',
+    icon: '🔍',
+    title: 'Web Presence',
+    subtitle: 'Google Custom Search',
+    trigger: 'name or username',
+    keyRequired: ['google_api','google_cx'],
+    getAcquireUrl: () => 'https://developers.google.com/custom-search/v1/overview',
+  },
+];
+
+// ── OSINT RUN ENGINE ────────────────────────────────────────────
+let g_osintRunning = false;
+
+function osintGetInputs() {
+  return {
+    email:  document.getElementById('osint-email').value.trim(),
+    ip:     document.getElementById('osint-ip').value.trim(),
+    phone:  document.getElementById('osint-phone').value.trim(),
+    name:   document.getElementById('osint-name').value.trim(),
+    domain: document.getElementById('osint-domain').value.trim(),
+  };
+}
+
+function osintHasAnyInput() {
+  const v = osintGetInputs();
+  return !!(v.email || v.ip || v.phone || v.name || v.domain);
+}
+
+// Enable/disable run button based on inputs
+['osint-email','osint-ip','osint-phone','osint-name','osint-domain'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    document.getElementById('osint-run-btn').disabled = !osintHasAnyInput();
+  });
+});
+
+document.getElementById('osint-run-btn').disabled = true;
+
+document.getElementById('osint-run-btn').addEventListener('click', () => {
+  if (g_osintRunning) return;
+  runOsint();
+});
+
+async function runOsint() {
+  g_osintRunning = true;
+  const inputs = osintGetInputs();
+  const btn = document.getElementById('osint-run-btn');
+  btn.classList.add('running'); btn.textContent = 'Running...';
+
+  // Build subject label
+  const subject = inputs.email || inputs.name || inputs.ip || inputs.phone || inputs.domain || 'Unknown Subject';
+  document.getElementById('osint-subject-label').textContent = subject;
+  document.getElementById('osint-meta-label').textContent =
+    `Query started ${new Date().toUTCString()} · OTAP OSINT ENGINE v1.0`;
+
+  // Clear previous results
+  const resultsEl = document.getElementById('osint-results');
+  resultsEl.innerHTML = '';
+
+  // Render all cards in loading state
+  for (const card of OSINT_CARDS) {
+    const shouldRun = cardShouldRun(card, inputs);
+    const hasKeys = card.keyRequired.every(k => osintHasKey(k));
+    renderOsintCard(card, shouldRun && hasKeys ? 'loading' : (hasKeys ? 'idle' : 'no-key'), null, inputs);
+  }
+
+  // Run each card concurrently
+  const promises = OSINT_CARDS.map(card => runOsintCard(card, inputs));
+  await Promise.allSettled(promises);
+
+  btn.classList.remove('running');
+  btn.textContent = 'Run OSINT';
+  g_osintRunning = false;
+  showToast('OSINT query complete');
+}
+
+function cardShouldRun(card, inputs) {
+  if (card.id === 'hibp')      return !!(inputs.email);
+  if (card.id === 'shodan')    return !!(inputs.ip || inputs.domain);
+  if (card.id === 'hunter')    return !!(inputs.email || inputs.domain);
+  if (card.id === 'numverify') return !!(inputs.phone);
+  if (card.id === 'google')    return !!(inputs.name || inputs.email);
+  return false;
+}
+
+async function runOsintCard(card, inputs) {
+  const hasKeys = card.keyRequired.every(k => osintHasKey(k));
+  const shouldRun = cardShouldRun(card, inputs);
+
+  if (!hasKeys) {
+    renderOsintCard(card, 'no-key', null, inputs);
+    return;
+  }
+  if (!shouldRun) {
+    renderOsintCard(card, 'idle', null, inputs);
+    return;
+  }
+
+  renderOsintCard(card, 'loading', null, inputs);
+
+  try {
+    let data = null;
+
+    if (card.id === 'hibp') {
+      data = await callOsintProxy('hibp', { email: inputs.email, key: osintGetKey('hibp') });
+    } else if (card.id === 'shodan') {
+      data = await callOsintProxy('shodan', { query: inputs.ip || inputs.domain, key: osintGetKey('shodan') });
+    } else if (card.id === 'hunter') {
+      data = await callOsintProxy('hunter', { email: inputs.email, domain: inputs.domain, key: osintGetKey('hunter') });
+    } else if (card.id === 'numverify') {
+      data = await callOsintProxy('numverify', { phone: inputs.phone, key: osintGetKey('numverify') });
+    } else if (card.id === 'google') {
+      data = await callOsintProxy('google', {
+        query: inputs.name || inputs.email,
+        key: osintGetKey('google_api'),
+        cx: osintGetKey('google_cx'),
+      });
+    }
+
+    const hasAlert = detectAlert(card.id, data);
+    renderOsintCard(card, hasAlert ? 'alert' : 'ok', data, inputs);
+
+  } catch (err) {
+    console.error(`[OSINT:${card.id}]`, err.message);
+    renderOsintCard(card, 'error', { error: err.message }, inputs);
+  }
+}
+
+// Proxy call through Apps Script doPost with action='osint'
+async function callOsintProxy(api, params) {
+  const body = {
+    key: g.accessKey,
+    action: 'osint',
+    api,
+    params,
+  };
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data.result;
+}
+
+function detectAlert(cardId, data) {
+  if (!data) return false;
+  if (cardId === 'hibp') return Array.isArray(data) && data.length > 0;
+  if (cardId === 'shodan') return data && data.vulns && Object.keys(data.vulns||{}).length > 0;
+  return false;
+}
+
+// ── CARD RENDERER ───────────────────────────────────────────────
+function renderOsintCard(card, status, data, inputs) {
+  const resultsEl = document.getElementById('osint-results');
+
+  // Remove existing card with same id if present
+  const existing = document.getElementById('osint-card-' + card.id);
+  if (existing) existing.remove();
+
+  const cardEl = document.createElement('div');
+  cardEl.id = 'osint-card-' + card.id;
+  cardEl.className = `osint-card ${status === 'ok' || status === 'alert' ? 'has-' + (status === 'alert' ? 'alert' : 'data') : ''} ${status === 'no-key' ? 'no-key' : ''} ${status === 'loading' ? 'loading' : ''}`;
+
+  const statusLabels = { idle:'Idle', loading:'Running...', ok:'Done', alert:'Alert', 'no-key':'No Key', error:'Error' };
+
+  cardEl.innerHTML = `
+    <div class="osint-card-header">
+      <div class="osint-card-header-left">
+        <div class="osint-card-icon">${card.icon}</div>
+        <div>
+          <div class="osint-card-title">${card.title}</div>
+          <div class="osint-card-trigger">${card.subtitle} · triggers on: ${card.trigger}</div>
+        </div>
+      </div>
+      <div class="osint-card-status ${status}">${statusLabels[status] || status}</div>
+    </div>
+    <div class="osint-card-body ${status === 'ok' || status === 'alert' || status === 'error' ? 'open' : ''}" id="osint-body-${card.id}">
+      ${buildCardBody(card, status, data, inputs)}
+    </div>
+  `;
+
+  // Toggle body on header click
+  cardEl.querySelector('.osint-card-header').addEventListener('click', () => {
+    const body = cardEl.querySelector('.osint-card-body');
+    body.classList.toggle('open');
+  });
+
+  resultsEl.appendChild(cardEl);
+}
+
+function buildCardBody(card, status, data, inputs) {
+  if (status === 'no-key') {
+    return `<div class="osint-no-key-msg">
+      No API key configured for ${card.subtitle}.<br>
+      Click <strong>Manage API Keys</strong> to add your key.<br>
+      <a href="${card.getAcquireUrl()}" target="_blank" rel="noopener">Acquire a key →</a>
+    </div>`;
+  }
+
+  if (status === 'idle') {
+    const reason = card.id === 'hibp' ? 'Requires email input'
+      : card.id === 'shodan' ? 'Requires IP or domain input'
+      : card.id === 'hunter' ? 'Requires email or domain input'
+      : card.id === 'numverify' ? 'Requires phone number input'
+      : 'Requires name or username input';
+    return `<div class="osint-no-key-msg">${reason}</div>`;
+  }
+
+  if (status === 'loading') {
+    return `<div class="osint-no-key-msg">Querying ${card.subtitle}...</div>`;
+  }
+
+  if (status === 'error') {
+    const msg = data?.error || 'Unknown error';
+    return `<div class="osint-no-key-msg" style="color:#c5a267">
+      Error: ${esc(msg)}<br>
+      <span style="font-size:10px;color:rgba(249,249,249,0.2)">Check API key or network. All calls are proxied through Apps Script.</span>
+    </div>`;
+  }
+
+  // Render actual data
+  if (card.id === 'hibp') return buildHibpBody(data);
+  if (card.id === 'shodan') return buildShodanBody(data);
+  if (card.id === 'hunter') return buildHunterBody(data, inputs);
+  if (card.id === 'numverify') return buildNumverifyBody(data);
+  if (card.id === 'google') return buildGoogleBody(data);
+  return `<div class="osint-no-key-msg">No data</div>`;
+}
+
+// ── HIBP BODY ────────────────────────────────────────────────────
+function buildHibpBody(data) {
+  if (!Array.isArray(data) || data.length === 0) {
+    return `<div class="osint-data-row">
+      <div class="osint-data-key">Status</div>
+      <div class="osint-data-val ok">No breaches found ✓</div>
+    </div>`;
+  }
+  let html = `<div class="osint-data-row">
+    <div class="osint-data-key">Breaches</div>
+    <div class="osint-data-val alert">${data.length} breach${data.length!==1?'es':''} found</div>
+  </div>
+  <div class="osint-breach-list">`;
+  for (const breach of data.slice(0, 10)) {
+    const classes = (breach.DataClasses||[]).map(c=>`<span class="osint-tag alert">${esc(c)}</span>`).join('');
+    html += `<div class="osint-breach-item">
+      <div class="osint-breach-name">${esc(breach.Name||breach.Title||'Unknown')}</div>
+      <div class="osint-breach-meta">
+        Date: ${esc(breach.BreachDate||'Unknown')} &nbsp;·&nbsp;
+        Records: ${breach.PwnCount ? breach.PwnCount.toLocaleString() : 'Unknown'}
+      </div>
+      ${classes ? `<div class="osint-tags" style="margin-top:6px">${classes}</div>` : ''}
+    </div>`;
+  }
+  if (data.length > 10) {
+    html += `<div class="osint-no-key-msg" style="margin-top:6px">+${data.length-10} more breaches</div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+// ── SHODAN BODY ──────────────────────────────────────────────────
+function buildShodanBody(data) {
+  if (!data) return `<div class="osint-no-key-msg">No data returned</div>`;
+  let html = '';
+  const rows = [
+    ['IP',          data.ip_str || data.ip],
+    ['Organisation', data.org],
+    ['ISP',         data.isp],
+    ['Country',     data.country_name],
+    ['City',        data.city],
+    ['Hostnames',   (data.hostnames||[]).join(', ')],
+    ['OS',          data.os],
+    ['Open Ports',  (data.ports||[]).join(', ')],
+  ];
+  for (const [k, v] of rows) {
+    if (!v) continue;
+    html += `<div class="osint-data-row">
+      <div class="osint-data-key">${k}</div>
+      <div class="osint-data-val">${esc(String(v))}</div>
+    </div>`;
+  }
+  const vulns = Object.keys(data.vulns||{});
+  if (vulns.length > 0) {
+    html += `<div class="osint-data-row">
+      <div class="osint-data-key">CVEs</div>
+      <div class="osint-data-val alert">${vulns.length} vulnerability${vulns.length!==1?'s':''}</div>
+    </div>`;
+    html += `<div class="osint-tags">` + vulns.slice(0,8).map(v=>`<span class="osint-tag alert">${esc(v)}</span>`).join('') + `</div>`;
+  }
+  const tags = data.tags||[];
+  if (tags.length > 0) {
+    html += `<div class="osint-tags" style="margin-top:8px">` + tags.map(t=>`<span class="osint-tag accent">${esc(t)}</span>`).join('') + `</div>`;
+  }
+  return html || `<div class="osint-no-key-msg">No data returned</div>`;
+}
+
+// ── HUNTER BODY ──────────────────────────────────────────────────
+function buildHunterBody(data, inputs) {
+  if (!data) return `<div class="osint-no-key-msg">No data returned</div>`;
+  let html = '';
+  // Email verification result
+  if (data.result) {
+    const score = data.score !== undefined ? data.score + '%' : null;
+    html += `<div class="osint-data-row">
+      <div class="osint-data-key">Deliverable</div>
+      <div class="osint-data-val ${data.result==='deliverable'?'ok':'alert'}">${esc(data.result)}</div>
+    </div>`;
+    if (score) html += `<div class="osint-data-row"><div class="osint-data-key">Confidence</div><div class="osint-data-val">${score}</div></div>`;
+    if (data.sources && data.sources.length > 0) {
+      html += `<div class="osint-data-row"><div class="osint-data-key">Found on</div><div class="osint-data-val dim">${data.sources.slice(0,3).map(s=>esc(s.domain||s.uri||'')).join(', ')}</div></div>`;
+    }
+  }
+  // Domain search result
+  if (data.emails) {
+    html += `<div class="osint-data-row">
+      <div class="osint-data-key">Emails found</div>
+      <div class="osint-data-val">${data.emails.length}</div>
+    </div>`;
+    for (const email of (data.emails||[]).slice(0,5)) {
+      html += `<div class="osint-data-row">
+        <div class="osint-data-key dim">${esc(email.type||'')}</div>
+        <div class="osint-data-val">${esc(email.value||'')}</div>
+      </div>`;
+    }
+    if (data.organization) html += `<div class="osint-data-row"><div class="osint-data-key">Org</div><div class="osint-data-val">${esc(data.organization)}</div></div>`;
+  }
+  return html || `<div class="osint-no-key-msg">No matching data found</div>`;
+}
+
+// ── NUMVERIFY BODY ───────────────────────────────────────────────
+function buildNumverifyBody(data) {
+  if (!data) return `<div class="osint-no-key-msg">No data returned</div>`;
+  const rows = [
+    ['Valid',        data.valid ? 'Yes ✓' : 'No ✗', data.valid ? 'ok' : 'alert'],
+    ['Number',       data.international_format],
+    ['Country',      data.country_name],
+    ['Country Code', data.country_code],
+    ['Location',     data.location],
+    ['Carrier',      data.carrier],
+    ['Line type',    data.line_type],
+  ];
+  let html = '';
+  for (const [k, v, cls] of rows) {
+    if (!v && v !== 0) continue;
+    html += `<div class="osint-data-row">
+      <div class="osint-data-key">${k}</div>
+      <div class="osint-data-val ${cls||''}">${esc(String(v))}</div>
+    </div>`;
+  }
+  return html || `<div class="osint-no-key-msg">No data returned</div>`;
+}
+
+// ── GOOGLE CSE BODY ──────────────────────────────────────────────
+function buildGoogleBody(data) {
+  if (!data || !data.items || data.items.length === 0) {
+    return `<div class="osint-no-key-msg">No web presence found</div>`;
+  }
+  let html = `<div class="osint-data-row">
+    <div class="osint-data-key">Results</div>
+    <div class="osint-data-val">${data.searchInformation?.totalResults || data.items.length} found</div>
+  </div>`;
+  for (const item of data.items.slice(0, 8)) {
+    html += `<div class="osint-web-result">
+      <div class="osint-web-result-title" onclick="window.open('${esc(item.link)}','_blank','noopener')">${esc(item.title||'')}</div>
+      <div class="osint-web-result-url">${esc(item.displayLink||item.link||'')}</div>
+      <div class="osint-web-result-snippet">${esc(item.snippet||'')}</div>
+    </div>`;
+  }
+  return html;
+}
+
+// ── PHASE 3 — OPERATOR NOTES ─────────────────────────────────────
 document.getElementById('op-notes-save').addEventListener('click', () => {
   if (!g.selectedPin) return;
   const key = pinNoteKey(g.selectedPin);
@@ -2597,7 +3958,9 @@ if (g.pinColourMode === 'source-type') {
   btn.classList.add('active');
   btn.textContent = '● Colour: Source type';
 }
-console.log('[OTAP] Phase 2 Dashboard ready — https://otapinitiative-lab.github.io/otap-dashboard/');
+// Initialise OSINT key statuses
+updateOsintKeyStatuses();
+console.log('[OTAP] Phase 3 Dashboard ready — https://otapinitiative-lab.github.io/otap-dashboard/');
 </script>
 </body>
 </html>
