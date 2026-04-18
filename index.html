@@ -2979,9 +2979,9 @@ function initMap() {
     maxBounds:[[-85,-Infinity],[85,Infinity]],
   });
 
-  // Stadia Alidade Smooth Dark — accurate state/province borders, no API key required
-  L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',{
-    maxZoom:20,
+  // CartoDB Dark Matter — clean dark basemap
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+    subdomains:'abcd', maxZoom:19,
   }).addTo(g.leafletMap);
 
   g.leafletMap.on('mousemove', e => {
