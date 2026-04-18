@@ -6,10 +6,10 @@
 <title>OTAP DASHBOARD</title>
 <style>
 /* ═══════════════════════════════════════════════════════════════
-   OTAP DASHBOARD — Phase 3 Web Build
+   OTAP DASHBOARD — Phase 4 Web Build
    Hosted: https://otapinitiative-lab.github.io/otap-dashboard/
-   Phase 3: Full OSINT mode — 5 API integrations, key management,
-   scrollable results panel, dark web placeholders, security tier
+   Phase 4: Work Desk (mind map, spreadsheet import, charts),
+   Market ticker on Map Mode (live indices + top movers)
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── SITE CSS VARIABLE SYSTEM (mirrors Squarespace custom CSS) ── */
@@ -1487,6 +1487,7 @@ html, body {
   background: var(--otap-navy);
   flex-direction: row;
   overflow: hidden;
+  position: relative;
 }
 
 /* Left input sidebar — 290px matching C++ original */
@@ -2138,6 +2139,326 @@ html, body {
   padding-bottom: 10px;
   border-bottom: 0.5px solid var(--otap-border);
 }
+
+/* ═══════════════════════════════
+   PHASE 4 — MARKET TICKER (Map Mode only)
+   ═══════════════════════════════ */
+
+#market-ticker {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 30px;
+  background: rgba(0,0,0,0.88);
+  border-top: 0.5px solid var(--otap-border);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  z-index: 900;
+}
+.ticker-label {
+  flex-shrink: 0;
+  padding: 0 12px;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border-right: 0.5px solid var(--otap-border);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  background: rgba(0,0,0,0.5);
+  gap: 6px;
+}
+.ticker-live-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse-accent 2s infinite;
+  flex-shrink: 0;
+}
+.ticker-scroll-wrap {
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+  position: relative;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+}
+.ticker-track {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  white-space: nowrap;
+  animation: ticker-scroll 80s linear infinite;
+}
+.ticker-track:hover { animation-play-state: paused; }
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  border-right: 0.5px solid rgba(255,255,255,0.05);
+  font-size: 11px;
+  height: 100%;
+  cursor: default;
+}
+.ticker-sym { color: var(--otap-white); font-size: 11px; letter-spacing: 0.04em; font-weight: 500; }
+.ticker-name { color: rgba(249,249,249,0.2); font-size: 9px; }
+.ticker-price { color: var(--otap-white); }
+.ticker-chg { font-size: 10px; }
+.ticker-chg.up   { color: #7a9f6a; }
+.ticker-chg.down { color: #e05c5c; }
+.ticker-chg.flat { color: rgba(249,249,249,0.3); }
+.ticker-section {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(249,249,249,0.15);
+  height: 100%;
+  border-right: 0.5px solid rgba(255,255,255,0.05);
+}
+.ticker-loading {
+  padding: 0 16px;
+  font-size: 10px;
+  color: rgba(249,249,249,0.2);
+  letter-spacing: 0.1em;
+  animation: osint-pulse 1.5s infinite;
+}
+
+/* ═══════════════════════════════
+   PHASE 4 — WORK DESK SCREEN
+   ═══════════════════════════════ */
+
+#screen-workdesk {
+  background: var(--otap-navy);
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+.wd-topbar {
+  height: 46px;
+  flex-shrink: 0;
+  background: var(--otap-navy-mid);
+  border-bottom: 0.5px solid var(--otap-border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+.wd-topbar-brand {
+  font-family: Georgia, serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--otap-white);
+  margin-right: 8px;
+}
+.wd-topbar-mode {
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-right: 24px;
+  padding-left: 8px;
+  border-left: 0.5px solid var(--otap-border);
+}
+.wd-tab {
+  height: 46px;
+  padding: 0 16px;
+  border: none;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(249,249,249,0.3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+}
+.wd-tab:hover { color: var(--otap-white); }
+.wd-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.wd-topbar-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.wd-btn {
+  padding: 5px 12px;
+  border: 0.5px solid var(--otap-border);
+  border-radius: 2px;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(249,249,249,0.35);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.wd-btn:hover { border-color: var(--accent); color: var(--accent); }
+.wd-btn.accent { border-color: var(--accent); color: var(--accent); }
+.wd-btn.accent:hover { background: var(--accent); color: var(--otap-navy); }
+.wd-panel { flex: 1; display: none; overflow: hidden; position: relative; }
+.wd-panel.active { display: flex; }
+
+/* Mind Map */
+#wd-mindmap { background: var(--otap-navy); }
+#mindmap-canvas { width: 100%; height: 100%; display: block; }
+.mm-toolbar {
+  position: absolute;
+  top: 12px; left: 12px;
+  display: flex; flex-direction: column; gap: 5px; z-index: 10;
+}
+.mm-tool {
+  width: 34px; height: 34px;
+  border: 0.5px solid var(--otap-border);
+  border-radius: 2px;
+  background: var(--otap-navy-mid);
+  color: rgba(249,249,249,0.35);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s;
+  user-select: none;
+}
+.mm-tool:hover { border-color: var(--accent); color: var(--accent); }
+.mm-tool.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.mm-hint {
+  position: absolute;
+  bottom: 12px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: rgba(249,249,249,0.12);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  pointer-events: none;
+  white-space: nowrap;
+}
+#mm-node-edit {
+  position: absolute;
+  background: var(--otap-navy-mid);
+  border: 0.5px solid var(--accent);
+  border-radius: 2px;
+  padding: 6px 8px;
+  display: none;
+  z-index: 20;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+}
+#mm-node-edit input {
+  background: transparent; border: none; outline: none;
+  font-family: var(--font); font-size: 12px;
+  color: var(--otap-white); width: 160px; letter-spacing: 0.02em;
+}
+#mm-node-edit button {
+  padding: 3px 8px;
+  border: 0.5px solid; border-radius: 2px;
+  background: transparent; font-family: var(--font);
+  font-size: 10px; cursor: pointer; letter-spacing: 0.06em;
+}
+#mm-node-edit .mm-save { border-color: var(--accent); color: var(--accent); }
+#mm-node-edit .mm-save:hover { background: var(--accent); color: var(--otap-navy); }
+#mm-node-edit .mm-del { border-color: #e05c5c; color: #e05c5c; }
+#mm-node-edit .mm-del:hover { background: #e05c5c; color: #fff; }
+
+/* Spreadsheet */
+#wd-data { flex-direction: column; }
+.wd-data-bar {
+  padding: 8px 16px;
+  border-bottom: 0.5px solid var(--otap-border);
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.wd-data-info { font-size: 10px; color: rgba(249,249,249,0.2); letter-spacing: 0.08em; margin-left: auto; }
+.wd-data-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.wd-paste-zone {
+  border: 1px dashed rgba(255,255,255,0.08);
+  border-radius: 2px; padding: 32px; margin: 20px;
+  text-align: center; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.wd-paste-zone:hover, .wd-paste-zone.dragover {
+  border-color: var(--accent); background: var(--accent-dim);
+}
+.wd-paste-text {
+  font-size: 12px; color: rgba(249,249,249,0.2);
+  letter-spacing: 0.06em; line-height: 1.9;
+}
+.wd-paste-text strong { color: rgba(249,249,249,0.4); }
+.wd-sheet-wrap {
+  flex: 1; overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.08) transparent;
+}
+.wd-sheet-wrap::-webkit-scrollbar { width: 4px; height: 4px; }
+.wd-sheet-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); }
+.wd-table { border-collapse: collapse; font-size: 11px; min-width: 100%; }
+.wd-table th {
+  background: var(--otap-navy-mid);
+  color: rgba(249,249,249,0.3);
+  font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 6px 12px;
+  border: 0.5px solid rgba(255,255,255,0.06);
+  text-align: left; white-space: nowrap;
+  position: sticky; top: 0; z-index: 2; font-weight: 400;
+}
+.wd-table td {
+  padding: 5px 12px;
+  border: 0.5px solid rgba(255,255,255,0.03);
+  color: rgba(249,249,249,0.65);
+  white-space: nowrap; max-width: 220px;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.wd-table td:first-child { color: rgba(249,249,249,0.2); font-size: 9px; }
+.wd-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* Charts */
+#wd-charts { flex-direction: column; }
+.wd-chart-bar {
+  padding: 8px 16px;
+  border-bottom: 0.5px solid var(--otap-border);
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.wd-select {
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid var(--otap-border);
+  border-radius: 2px; padding: 5px 8px;
+  font-family: var(--font); font-size: 11px;
+  color: rgba(249,249,249,0.5);
+  outline: none; cursor: pointer;
+  transition: border-color 0.15s;
+}
+.wd-select:focus { border-color: var(--accent); }
+.wd-chart-area {
+  flex: 1; padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 14px; overflow: auto;
+}
+#wd-chart-canvas { border-radius: 2px; background: var(--otap-navy-mid); display: block; }
+.wd-chart-no-data {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 10px;
+  color: rgba(249,249,249,0.15); font-size: 11px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.wd-stats-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.wd-stat {
+  background: var(--otap-navy-mid);
+  border: 0.5px solid var(--otap-border);
+  border-radius: 2px; padding: 8px 14px; min-width: 110px;
+}
+.wd-stat-label {
+  font-size: 9px; color: rgba(249,249,249,0.2);
+  letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px;
+}
+.wd-stat-val { font-size: 16px; color: var(--otap-white); }
+.wd-stat-val.up { color: #7a9f6a; }
+.wd-stat-val.down { color: #e05c5c; }
+
 </style>
 </head>
 <body>
@@ -2200,10 +2521,10 @@ html, body {
       <div class="mode-card-accent"></div>
       <div class="mode-card-tag">Mode 03</div>
       <div class="mode-card-name">Work Desk</div>
-      <div class="mode-card-subtitle">Network Analysis</div>
-      <div class="mode-card-desc">Build and persist connection maps between sources, actors, and events. Drag nodes, draw edges, save progress.</div>
+      <div class="mode-card-subtitle">Mind Map · Data · Charts</div>
+      <div class="mode-card-desc">Build connection maps between sources, actors, and events. Import spreadsheet data and generate intelligence charts.</div>
       <div class="mode-card-footer">
-        <div class="mode-card-badge">Coming Soon</div>
+        <div class="mode-card-badge">Phase 4</div>
         <div class="mode-card-arrow">&#8594;</div>
       </div>
     </div>
@@ -2248,6 +2569,19 @@ html, body {
       <div class="legend-item">
         <div class="legend-square">⚓</div>
         Maritime
+      </div>
+    </div>
+
+    <!-- Market Ticker — Map Mode only -->
+    <div id="market-ticker">
+      <div class="ticker-label">
+        <div class="ticker-live-dot"></div>
+        Markets
+      </div>
+      <div class="ticker-scroll-wrap">
+        <div class="ticker-track" id="ticker-track">
+          <div class="ticker-loading" id="ticker-loading">Fetching market data...</div>
+        </div>
       </div>
     </div>
   </div>
@@ -2609,6 +2943,93 @@ html, body {
 </div>
 
 
+<!-- WORK DESK SCREEN -->
+<div id="screen-workdesk" class="screen">
+
+  <!-- Top bar -->
+  <div class="wd-topbar">
+    <div class="wd-topbar-brand">OTAP Dashboard</div>
+    <div class="wd-topbar-mode">[ Work Desk ]</div>
+    <button class="wd-tab active" data-wdtab="mindmap">Mind Map</button>
+    <button class="wd-tab" data-wdtab="data">Data</button>
+    <button class="wd-tab" data-wdtab="charts">Charts</button>
+    <div class="wd-topbar-right">
+      <button class="wd-btn accent" id="wd-save-btn">Save</button>
+      <button class="wd-btn" id="wd-clear-btn">Clear</button>
+      <button class="wd-btn" id="wd-back-btn">&#8592; Mode Select</button>
+      <div class="sb-wc" style="margin-left:8px">
+        <div class="wc-btn" id="wd-btn-minimize">—</div>
+        <div class="wc-btn" id="wd-btn-fullscreen">&#9633;</div>
+        <div class="wc-btn close" id="wd-btn-close">&#215;</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mind Map Panel -->
+  <div class="wd-panel active" id="wd-mindmap">
+    <canvas id="mindmap-canvas"></canvas>
+    <div class="mm-toolbar">
+      <div class="mm-tool active" id="mm-tool-select" title="Select / Move">&#9654;</div>
+      <div class="mm-tool" id="mm-tool-node" title="Add Node">&#9711;</div>
+      <div class="mm-tool" id="mm-tool-edge" title="Draw Edge">&#8212;</div>
+      <div class="mm-tool" id="mm-tool-delete" title="Delete">&#10006;</div>
+      <div class="mm-tool" id="mm-tool-pan" title="Pan">&#9683;</div>
+    </div>
+    <div class="mm-hint" id="mm-hint">Double-click canvas to add node · Drag nodes to move · Edge tool: click source then target</div>
+    <div id="mm-node-edit">
+      <input id="mm-node-input" type="text" placeholder="Node label...">
+      <button class="mm-save" id="mm-save-btn">OK</button>
+      <button class="mm-del" id="mm-del-btn">Delete</button>
+    </div>
+  </div>
+
+  <!-- Data / Spreadsheet Panel -->
+  <div class="wd-panel" id="wd-data">
+    <div class="wd-data-bar">
+      <button class="wd-btn accent" id="wd-import-btn">&#43; Import CSV / paste</button>
+      <button class="wd-btn" id="wd-clear-data-btn">Clear data</button>
+      <div class="wd-data-info" id="wd-data-info"></div>
+    </div>
+    <div class="wd-data-body" id="wd-data-body">
+      <div class="wd-paste-zone" id="wd-paste-zone">
+        <div class="wd-paste-text">
+          <strong>Paste CSV data here</strong><br>
+          Copy from Excel, Google Sheets, or any CSV source and paste with Ctrl+V<br>
+          <span style="font-size:10px;opacity:0.6">First row is treated as column headers · All data stays local</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Panel -->
+  <div class="wd-panel" id="wd-charts">
+    <div class="wd-chart-bar">
+      <span style="font-size:10px;color:rgba(249,249,249,0.25);letter-spacing:0.12em;text-transform:uppercase">Chart type</span>
+      <select class="wd-select" id="wd-chart-type">
+        <option value="bar">Bar</option>
+        <option value="line">Line</option>
+        <option value="scatter">Scatter</option>
+        <option value="area">Area</option>
+      </select>
+      <span style="font-size:10px;color:rgba(249,249,249,0.25);letter-spacing:0.12em;text-transform:uppercase">X axis</span>
+      <select class="wd-select" id="wd-col-x"><option value="">— select —</option></select>
+      <span style="font-size:10px;color:rgba(249,249,249,0.25);letter-spacing:0.12em;text-transform:uppercase">Y axis</span>
+      <select class="wd-select" id="wd-col-y"><option value="">— select —</option></select>
+      <button class="wd-btn accent" id="wd-render-chart">Render</button>
+      <button class="wd-btn" id="wd-export-chart">Export PNG</button>
+    </div>
+    <div class="wd-chart-area" id="wd-chart-area">
+      <div class="wd-chart-no-data" id="wd-chart-no-data">
+        <div class="intel-placeholder-dot"></div>
+        Import data in the Data tab, then select columns to chart
+      </div>
+      <canvas id="wd-chart-canvas" style="display:none"></canvas>
+      <div class="wd-stats-row" id="wd-stats-row"></div>
+    </div>
+  </div>
+
+</div>
+
 <!-- Toast -->
 <div id="toast"></div>
 
@@ -2783,20 +3204,7 @@ function doLogin() {
   showScreen('mode');
 }
 
-// ── MODE SELECT ───────────────────────────────────────────────────
-document.querySelectorAll('.mode-card').forEach(card => {
-  card.addEventListener('click', () => {
-    g.appMode = card.dataset.mode;
-    if (g.appMode === 'map') {
-      showScreen('region');
-    } else if (g.appMode === 'osint') {
-      showScreen('osint');
-      updateOsintKeyStatuses();
-    } else {
-      enterDashboard();
-    }
-  });
-});
+// ── MODE SELECT — handled by Phase 4 listener below ───────────────
 
 // ── REGION GRID BUILD ─────────────────────────────────────────────
 (function buildRegions() {
@@ -2844,6 +3252,8 @@ function enterDashboard() {
   loadExtDashboards();
   if (!g.leafletMap) initMap();
   startSync();
+  // Start market ticker (Map Mode only)
+  initTicker();
 }
 
 function updateModeLabel() {
@@ -3450,59 +3860,63 @@ function updateOsintKeyStatuses() {
   }
 }
 
-// Key save button handlers
-document.querySelectorAll('.osint-key-save').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const keyName = btn.dataset.key;
-    let inputEl;
-    if (keyName === 'hibp')       inputEl = document.getElementById('key-hibp');
-    if (keyName === 'shodan')     inputEl = document.getElementById('key-shodan');
-    if (keyName === 'hunter')     inputEl = document.getElementById('key-hunter');
-    if (keyName === 'numverify')  inputEl = document.getElementById('key-numverify');
-    if (keyName === 'google_api') inputEl = document.getElementById('key-google-api');
-    if (keyName === 'google_cx')  inputEl = document.getElementById('key-google-cx');
-    if (!inputEl) return;
-    const val = inputEl.value.trim();
-    // Don't overwrite with masked value
-    if (val && !val.startsWith('••')) {
-      osintSetKey(keyName, val);
-      showToast(`${keyName} key saved`);
-      updateOsintKeyStatuses();
-    }
+// ── PHASE 3 — OSINT EVENT WIRING (guarded) ───────────────────────
+(function wireOsint() {
+  // Guard every getElementById — a null here would crash the whole script
+  const safe = id => {
+    const el = document.getElementById(id);
+    if (!el) console.warn('[OTAP] Missing element:', id);
+    return el;
+  };
+
+  // Key save buttons
+  document.querySelectorAll('.osint-key-save').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const keyName = btn.dataset.key;
+      const inputMap = {
+        hibp:'key-hibp', shodan:'key-shodan', hunter:'key-hunter',
+        numverify:'key-numverify', google_api:'key-google-api', google_cx:'key-google-cx'
+      };
+      const inputEl = document.getElementById(inputMap[keyName]);
+      if (!inputEl) return;
+      const val = inputEl.value.trim();
+      if (val && !val.startsWith('••')) {
+        osintSetKey(keyName, val);
+        showToast(`${keyName} key saved`);
+        updateOsintKeyStatuses();
+      }
+    });
   });
-});
 
-// Keys panel open/close
-document.getElementById('osint-keys-btn').addEventListener('click', () => {
-  document.getElementById('osint-keys-panel').style.display = 'flex';
-  updateOsintKeyStatuses();
-});
+  const keysBtn    = safe('osint-keys-btn');
+  const keysClose  = safe('osint-keys-close');
+  const backBtn    = safe('osint-back-btn');
+  const runBtn     = safe('osint-run-btn');
+  const minBtn     = safe('osint-btn-minimize');
+  const fsBtn      = safe('osint-btn-fullscreen');
+  const closeBtn   = safe('osint-btn-close');
+  const keysPanel  = safe('osint-keys-panel');
 
-document.getElementById('osint-keys-close').addEventListener('click', () => {
-  document.getElementById('osint-keys-panel').style.display = 'none';
-  updateOsintKeyStatuses();
-});
+  if (keysBtn && keysPanel)   keysBtn.addEventListener('click',  () => { keysPanel.style.display='flex'; updateOsintKeyStatuses(); });
+  if (keysClose && keysPanel) keysClose.addEventListener('click', () => { keysPanel.style.display='none'; updateOsintKeyStatuses(); });
+  if (backBtn)  backBtn.addEventListener('click',  () => showScreen('mode'));
+  if (minBtn)   minBtn.addEventListener('click',   () => { document.querySelector('.osint-sidebar').style.transform='translateX(-110%)'; setTimeout(()=>document.querySelector('.osint-sidebar').style.transform='',1500); });
+  if (fsBtn)    fsBtn.addEventListener('click',    () => { if(!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); });
+  if (closeBtn) closeBtn.addEventListener('click', () => { if(confirm('Close OTAP Dashboard?')) window.close(); });
 
-// Back to mode select
-document.getElementById('osint-back-btn').addEventListener('click', () => {
-  showScreen('mode');
-});
+  // Input → enable run button
+  ['osint-email','osint-ip','osint-phone','osint-name','osint-domain'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => {
+      if (runBtn) runBtn.disabled = !osintHasAnyInput();
+    });
+  });
 
-// OSINT window controls
-document.getElementById('osint-btn-minimize').addEventListener('click', () => {
-  // Shrink sidebar as visual feedback in browser context
-  document.querySelector('.osint-sidebar').style.transform = 'translateX(-110%)';
-  setTimeout(() => document.querySelector('.osint-sidebar').style.transform = '', 1500);
-});
-document.getElementById('osint-btn-fullscreen').addEventListener('click', () => {
-  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
-  else document.exitFullscreen?.();
-});
-document.getElementById('osint-btn-close').addEventListener('click', () => {
-  if (confirm('Close OTAP Dashboard?')) window.close();
-});
-
-// ── OSINT CARD DEFINITIONS ──────────────────────────────────────
+  if (runBtn) {
+    runBtn.disabled = true;
+    runBtn.addEventListener('click', () => { if (!g_osintRunning) runOsint(); });
+  }
+})();
 const OSINT_CARDS = [
   {
     id: 'hibp',
@@ -3953,17 +4367,912 @@ function showToast(msg) {
   _toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  PHASE 4 — MARKET TICKER (Map Mode only)
+// ═══════════════════════════════════════════════════════════════
+
+// Yahoo Finance quote data via allorigins CORS proxy (no API key needed)
+const TICKER_SYMBOLS = [
+  // Major indices
+  { sym:'^GSPC',  name:'S&P 500',    section:'Indices' },
+  { sym:'^DJI',   name:'Dow Jones',  section:null },
+  { sym:'^IXIC',  name:'NASDAQ',     section:null },
+  { sym:'^FTSE',  name:'FTSE 100',   section:null },
+  { sym:'^GDAXI', name:'DAX',        section:null },
+  { sym:'^FCHI',  name:'CAC 40',     section:null },
+  { sym:'^N225',  name:'Nikkei',     section:null },
+  { sym:'^HSI',   name:'Hang Seng',  section:null },
+  { sym:'^SSEC',  name:'Shanghai',   section:null },
+  // Major companies
+  { sym:'AAPL',  name:'Apple',       section:'Equities' },
+  { sym:'MSFT',  name:'Microsoft',   section:null },
+  { sym:'NVDA',  name:'NVIDIA',      section:null },
+  { sym:'GOOGL', name:'Alphabet',    section:null },
+  { sym:'AMZN',  name:'Amazon',      section:null },
+  { sym:'META',  name:'Meta',        section:null },
+  { sym:'TSLA',  name:'Tesla',       section:null },
+  { sym:'JPM',   name:'JPMorgan',    section:null },
+  { sym:'XOM',   name:'ExxonMobil',  section:null },
+  { sym:'BAC',   name:'Bank of Am.', section:null },
+  // Commodities & FX
+  { sym:'GC=F',  name:'Gold',        section:'Commodities' },
+  { sym:'CL=F',  name:'Crude Oil',   section:null },
+  { sym:'BTC-USD',name:'Bitcoin',    section:null },
+  { sym:'EURUSD=X',name:'EUR/USD',   section:'FX' },
+  { sym:'GBPUSD=X',name:'GBP/USD',  section:null },
+];
+
+let g_tickerData = {};
+let g_tickerLoaded = false;
+
+async function fetchTickerData() {
+  // Use Yahoo Finance v8 via allorigins proxy to avoid CORS
+  const syms = TICKER_SYMBOLS.map(s => s.sym).join(',');
+  const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(syms)}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,shortName`;
+  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+
+  try {
+    const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const quotes = data?.quoteResponse?.result || [];
+    for (const q of quotes) {
+      g_tickerData[q.symbol] = {
+        price: q.regularMarketPrice,
+        change: q.regularMarketChange,
+        pct: q.regularMarketChangePercent,
+        name: q.shortName || q.symbol,
+      };
+    }
+    g_tickerLoaded = true;
+    renderTicker();
+  } catch(e) {
+    console.warn('[TICKER]', e.message);
+    renderTickerFallback();
+  }
+}
+
+function renderTicker() {
+  const track = document.getElementById('ticker-track');
+  if (!track) return;
+
+  let html = '';
+  let lastSection = null;
+
+  for (const sym of TICKER_SYMBOLS) {
+    if (sym.section && sym.section !== lastSection) {
+      html += `<div class="ticker-section">${sym.section}</div>`;
+      lastSection = sym.section;
+    }
+    const d = g_tickerData[sym.sym];
+    if (!d) continue;
+
+    const up = d.change >= 0;
+    const arrow = up ? '▲' : '▼';
+    const cls = Math.abs(d.change) < 0.01 ? 'flat' : up ? 'up' : 'down';
+    const price = formatTickerPrice(d.price, sym.sym);
+    const pct = (up ? '+' : '') + (d.pct || 0).toFixed(2) + '%';
+
+    html += `<div class="ticker-item">
+      <span class="ticker-sym">${sym.sym.replace('=X','').replace('=F','').replace('^','')}</span>
+      <span class="ticker-name">${sym.name}</span>
+      <span class="ticker-price">${price}</span>
+      <span class="ticker-chg ${cls}">${arrow} ${pct}</span>
+    </div>`;
+  }
+
+  // Duplicate for seamless loop
+  if (html) {
+    track.innerHTML = html + html;
+    // Restart animation with correct width
+    track.style.animation = 'none';
+    requestAnimationFrame(() => {
+      track.style.animation = '';
+      // Calibrate speed to content width
+      const trackW = track.scrollWidth / 2;
+      const speed = Math.max(40, trackW / 80); // ~80px/sec
+      track.style.animationDuration = speed + 's';
+    });
+  }
+}
+
+function renderTickerFallback() {
+  // Minimal static data when network unavailable
+  const fallback = [
+    { sym:'S&P 500', name:'', price:'—', pct:'—', cls:'flat' },
+    { sym:'NASDAQ',  name:'', price:'—', pct:'—', cls:'flat' },
+    { sym:'FTSE',    name:'', price:'—', pct:'—', cls:'flat' },
+  ];
+  const track = document.getElementById('ticker-track');
+  if (!track) return;
+  let html = fallback.map(f => `<div class="ticker-item">
+    <span class="ticker-sym">${f.sym}</span>
+    <span class="ticker-price">${f.price}</span>
+    <span class="ticker-chg flat">${f.pct}</span>
+  </div>`).join('');
+  track.innerHTML = html + '<div class="ticker-item"><span class="ticker-name" style="color:rgba(249,249,249,0.15)">Market data unavailable</span></div>';
+}
+
+function formatTickerPrice(price, sym) {
+  if (price === undefined || price === null) return '—';
+  if (sym.includes('=X')) return price.toFixed(4);
+  if (price > 10000) return price.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+  if (price > 100)   return price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  return price.toFixed(2);
+}
+
+function initTicker() {
+  fetchTickerData();
+  // Refresh every 60 seconds
+  setInterval(fetchTickerData, 60000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PHASE 4 — WORK DESK ROUTING
+// ═══════════════════════════════════════════════════════════════
+
+// Update mode card routing for workdesk
+document.querySelectorAll('.mode-card').forEach(card => {
+  card.addEventListener('click', () => {
+    g.appMode = card.dataset.mode;
+    if (g.appMode === 'map') {
+      showScreen('region');
+    } else if (g.appMode === 'osint') {
+      showScreen('osint');
+      updateOsintKeyStatuses();
+    } else if (g.appMode === 'workdesk') {
+      showScreen('workdesk');
+      initWorkDesk();
+    } else {
+      enterDashboard();
+    }
+  });
+});
+
+// Work Desk tab switching
+document.querySelectorAll('[data-wdtab]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.wdtab;
+    document.querySelectorAll('[data-wdtab]').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.wd-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('wd-' + tab).classList.add('active');
+    if (tab === 'mindmap') resizeMindmapCanvas();
+    if (tab === 'charts' && g_sheetData.length > 0) populateChartSelectors();
+  });
+});
+
+// Work Desk window controls
+(function wireWorkDesk() {
+  const safe = id => document.getElementById(id);
+  const backBtn = safe('wd-back-btn');
+  const saveBtn = safe('wd-save-btn');
+  const clearBtn = safe('wd-clear-btn');
+  const minBtn  = safe('wd-btn-minimize');
+  const fsBtn   = safe('wd-btn-fullscreen');
+  const clsBtn  = safe('wd-btn-close');
+
+  if (backBtn)  backBtn.addEventListener('click',  () => showScreen('mode'));
+  if (saveBtn)  saveBtn.addEventListener('click',  () => { saveMindmap(); saveSheetData(); showToast('Work Desk saved'); });
+  if (clearBtn) clearBtn.addEventListener('click', () => {
+    const tab = document.querySelector('[data-wdtab].active')?.dataset.wdtab;
+    if (tab === 'mindmap') { if(confirm('Clear mind map?')) { g_mm.nodes=[]; g_mm.edges=[]; drawMindmap(); saveMindmap(); showToast('Mind map cleared'); } }
+    if (tab === 'data')    { if(confirm('Clear data?')) { g_sheetData=[]; g_sheetHeaders=[]; renderSheet(); showToast('Data cleared'); } }
+    if (tab === 'charts')  { clearChart(); }
+  });
+  if (minBtn)   minBtn.addEventListener('click',   () => document.querySelector('.wd-topbar').style.display='none');
+  if (fsBtn)    fsBtn.addEventListener('click',    () => { if(!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); });
+  if (clsBtn)   clsBtn.addEventListener('click',   () => { if(confirm('Close OTAP Dashboard?')) window.close(); });
+})();
+
+function initWorkDesk() {
+  resizeMindmapCanvas();
+  loadMindmap();
+  loadSheetData();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PHASE 4 — MIND MAP ENGINE
+// ═══════════════════════════════════════════════════════════════
+
+const g_mm = {
+  nodes: [],       // { id, x, y, label, color }
+  edges: [],       // { from, to, label }
+  nextId: 1,
+  tool: 'select',  // select | node | edge | delete | pan
+  dragging: null,  // node id being dragged
+  dragOffX: 0, dragOffY: 0,
+  edgeFrom: null,  // node id for edge start
+  panX: 0, panY: 0,
+  panStartX: 0, panStartY: 0,
+  isPanning: false,
+  selectedNode: null,
+  editingNode: null,
+  scale: 1,
+};
+
+const MM_COLORS = ['#4a9fd4','#7a9f6a','#c5a267','#e05c5c','#5fcfb0','#9b7fd4'];
+
+function resizeMindmapCanvas() {
+  const canvas = document.getElementById('mindmap-canvas');
+  if (!canvas) return;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width  = rect.width  || 800;
+  canvas.height = rect.height || 600;
+  drawMindmap();
+}
+
+function drawMindmap() {
+  const canvas = document.getElementById('mindmap-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Background grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 0.5;
+  const gs = 40;
+  for (let x = (g_mm.panX % gs); x < W; x += gs) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = (g_mm.panY % gs); y < H; y += gs) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+  // Edges
+  ctx.font = '10px ' + getComputedStyle(document.documentElement).getPropertyValue('--font');
+  for (const e of g_mm.edges) {
+    const a = g_mm.nodes.find(n => n.id === e.from);
+    const b = g_mm.nodes.find(n => n.id === e.to);
+    if (!a || !b) continue;
+    const ax = a.x + g_mm.panX, ay = a.y + g_mm.panY;
+    const bx = b.x + g_mm.panX, by = b.y + g_mm.panY;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    // Curved line
+    const mx = (ax + bx) / 2;
+    const my = (ay + by) / 2 - 20;
+    ctx.quadraticCurveTo(mx, my, bx, by);
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    // Arrow head
+    const angle = Math.atan2(by - my, bx - mx);
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(-8, -4); ctx.lineTo(0, 0); ctx.lineTo(-8, 4);
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Nodes
+  for (const node of g_mm.nodes) {
+    const nx = node.x + g_mm.panX;
+    const ny = node.y + g_mm.panY;
+    const label = node.label || 'Node';
+    ctx.font = '12px ' + getComputedStyle(document.documentElement).getPropertyValue('--font');
+    const tw = ctx.measureText(label).width;
+    const nw = Math.max(tw + 28, 80);
+    const nh = 32;
+
+    // Shadow for selected
+    if (node.id === g_mm.selectedNode) {
+      ctx.shadowColor = node.color || '#4a9fd4';
+      ctx.shadowBlur = 12;
+    }
+
+    // Node background
+    ctx.fillStyle = node.color ? node.color + '22' : 'rgba(10,10,10,0.9)';
+    ctx.strokeStyle = node.color || 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = node.id === g_mm.selectedNode ? 2 : 0.8;
+    roundRect(ctx, nx - nw/2, ny - nh/2, nw, nh, 4);
+    ctx.fill(); ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Label
+    ctx.fillStyle = '#f9f9f9';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, nx, ny);
+
+    // Edge-from indicator
+    if (node.id === g_mm.edgeFrom) {
+      ctx.beginPath();
+      ctx.arc(nx, ny, nw/2 + 4, 0, Math.PI*2);
+      ctx.strokeStyle = node.color || '#4a9fd4';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4,3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y); ctx.arcTo(x+w, y, x+w, y+r, r);
+  ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
+  ctx.lineTo(x+r, y+h); ctx.arcTo(x, y+h, x, y+h-r, r);
+  ctx.lineTo(x, y+r); ctx.arcTo(x, y, x+r, y, r);
+  ctx.closePath();
+}
+
+function mmNodeAt(cx, cy) {
+  for (let i = g_mm.nodes.length-1; i >= 0; i--) {
+    const n = g_mm.nodes[i];
+    const nx = n.x + g_mm.panX, ny = n.y + g_mm.panY;
+    const canvas = document.getElementById('mindmap-canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.font = '12px ' + getComputedStyle(document.documentElement).getPropertyValue('--font');
+    const tw = ctx.measureText(n.label||'Node').width;
+    const nw = Math.max(tw + 28, 80) / 2;
+    const nh = 16;
+    if (cx >= nx - nw && cx <= nx + nw && cy >= ny - nh && cy <= ny + nh) return n;
+  }
+  return null;
+}
+
+function showNodeEdit(node, canvasX, canvasY) {
+  const edit = document.getElementById('mm-node-edit');
+  const input = document.getElementById('mm-node-input');
+  g_mm.editingNode = node.id;
+  input.value = node.label || '';
+  edit.style.display = 'flex';
+  edit.style.left = (canvasX + 10) + 'px';
+  edit.style.top  = (canvasY - 20) + 'px';
+  input.focus(); input.select();
+}
+
+function hideNodeEdit() {
+  document.getElementById('mm-node-edit').style.display = 'none';
+  g_mm.editingNode = null;
+}
+
+function saveMindmap() {
+  try { localStorage.setItem('otap_mindmap', JSON.stringify({ nodes: g_mm.nodes, edges: g_mm.edges, nextId: g_mm.nextId })); } catch(e) {}
+}
+
+function loadMindmap() {
+  try {
+    const raw = localStorage.getItem('otap_mindmap');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    g_mm.nodes = d.nodes || [];
+    g_mm.edges = d.edges || [];
+    g_mm.nextId = d.nextId || (g_mm.nodes.length + 1);
+    drawMindmap();
+  } catch(e) {}
+}
+
+// Tool buttons
+document.querySelectorAll('.mm-tool').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tool = btn.id.replace('mm-tool-','');
+    g_mm.tool = tool;
+    g_mm.edgeFrom = null;
+    document.querySelectorAll('.mm-tool').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const hints = {
+      select:'Click node to select · Drag to move · Double-click to edit label',
+      node:'Click anywhere to add a node · Double-click to edit',
+      edge:'Click source node, then target node to draw edge',
+      delete:'Click a node or edge to delete it',
+      pan:'Click and drag to pan the canvas',
+    };
+    document.getElementById('mm-hint').textContent = hints[tool] || '';
+    const canvas = document.getElementById('mindmap-canvas');
+    const cursors = { select:'default', node:'crosshair', edge:'crosshair', delete:'not-allowed', pan:'grab' };
+    canvas.style.cursor = cursors[tool] || 'default';
+  });
+});
+
+// Node edit save/delete
+document.getElementById('mm-save-btn').addEventListener('click', () => {
+  const node = g_mm.nodes.find(n => n.id === g_mm.editingNode);
+  if (node) { node.label = document.getElementById('mm-node-input').value.trim() || 'Node'; drawMindmap(); saveMindmap(); }
+  hideNodeEdit();
+});
+
+document.getElementById('mm-del-btn').addEventListener('click', () => {
+  if (g_mm.editingNode) {
+    g_mm.nodes = g_mm.nodes.filter(n => n.id !== g_mm.editingNode);
+    g_mm.edges = g_mm.edges.filter(e => e.from !== g_mm.editingNode && e.to !== g_mm.editingNode);
+    hideNodeEdit(); drawMindmap(); saveMindmap();
+  }
+});
+
+document.getElementById('mm-node-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('mm-save-btn').click();
+  if (e.key === 'Escape') hideNodeEdit();
+});
+
+// Canvas interactions
+(function wireMindmapCanvas() {
+  const canvas = document.getElementById('mindmap-canvas');
+  if (!canvas) return;
+
+  let lastDbl = 0;
+
+  canvas.addEventListener('mousedown', e => {
+    const rect = canvas.getBoundingClientRect();
+    const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+    const node = mmNodeAt(cx, cy);
+    hideNodeEdit();
+
+    if (g_mm.tool === 'pan') {
+      g_mm.isPanning = true;
+      g_mm.panStartX = cx - g_mm.panX;
+      g_mm.panStartY = cy - g_mm.panY;
+      canvas.style.cursor = 'grabbing';
+      return;
+    }
+
+    if (g_mm.tool === 'select') {
+      if (node) {
+        g_mm.selectedNode = node.id;
+        g_mm.dragging = node.id;
+        g_mm.dragOffX = cx - (node.x + g_mm.panX);
+        g_mm.dragOffY = cy - (node.y + g_mm.panY);
+      } else {
+        g_mm.selectedNode = null;
+        g_mm.dragging = null;
+      }
+      drawMindmap();
+      return;
+    }
+
+    if (g_mm.tool === 'node') {
+      const color = MM_COLORS[g_mm.nodes.length % MM_COLORS.length];
+      const newNode = { id: g_mm.nextId++, x: cx - g_mm.panX, y: cy - g_mm.panY, label: 'Node', color };
+      g_mm.nodes.push(newNode);
+      drawMindmap(); saveMindmap();
+      showNodeEdit(newNode, cx, cy);
+      return;
+    }
+
+    if (g_mm.tool === 'edge') {
+      if (node) {
+        if (!g_mm.edgeFrom) {
+          g_mm.edgeFrom = node.id;
+          g_mm.selectedNode = node.id;
+        } else if (g_mm.edgeFrom !== node.id) {
+          // Avoid duplicate edges
+          const exists = g_mm.edges.some(e => e.from === g_mm.edgeFrom && e.to === node.id);
+          if (!exists) g_mm.edges.push({ from: g_mm.edgeFrom, to: node.id });
+          g_mm.edgeFrom = null; g_mm.selectedNode = null;
+          saveMindmap();
+        } else {
+          g_mm.edgeFrom = null;
+        }
+        drawMindmap();
+      }
+      return;
+    }
+
+    if (g_mm.tool === 'delete') {
+      if (node) {
+        g_mm.nodes = g_mm.nodes.filter(n => n.id !== node.id);
+        g_mm.edges = g_mm.edges.filter(e => e.from !== node.id && e.to !== node.id);
+        drawMindmap(); saveMindmap();
+      } else {
+        // Check edge hit (simplified — midpoint proximity)
+        for (let i = g_mm.edges.length-1; i >= 0; i--) {
+          const ed = g_mm.edges[i];
+          const a = g_mm.nodes.find(n => n.id === ed.from);
+          const b = g_mm.nodes.find(n => n.id === ed.to);
+          if (!a || !b) continue;
+          const mx = (a.x + g_mm.panX + b.x + g_mm.panX) / 2;
+          const my = (a.y + g_mm.panY + b.y + g_mm.panY) / 2 - 10;
+          if (Math.abs(cx - mx) < 14 && Math.abs(cy - my) < 14) {
+            g_mm.edges.splice(i, 1); drawMindmap(); saveMindmap(); break;
+          }
+        }
+      }
+      return;
+    }
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+    if (g_mm.isPanning) {
+      g_mm.panX = cx - g_mm.panStartX;
+      g_mm.panY = cy - g_mm.panStartY;
+      drawMindmap();
+    } else if (g_mm.dragging !== null) {
+      const node = g_mm.nodes.find(n => n.id === g_mm.dragging);
+      if (node) { node.x = cx - g_mm.dragOffX - g_mm.panX; node.y = cy - g_mm.dragOffY - g_mm.panY; drawMindmap(); }
+    }
+  });
+
+  canvas.addEventListener('mouseup', () => {
+    if (g_mm.dragging !== null) saveMindmap();
+    g_mm.dragging = null;
+    g_mm.isPanning = false;
+    if (g_mm.tool === 'pan') canvas.style.cursor = 'grab';
+  });
+
+  canvas.addEventListener('dblclick', e => {
+    const rect = canvas.getBoundingClientRect();
+    const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+    const node = mmNodeAt(cx, cy);
+    if (node && g_mm.tool !== 'delete') showNodeEdit(node, cx, cy);
+    else if (!node && g_mm.tool === 'select') {
+      // Double-click empty space in select mode = add node
+      const color = MM_COLORS[g_mm.nodes.length % MM_COLORS.length];
+      const newNode = { id: g_mm.nextId++, x: cx - g_mm.panX, y: cy - g_mm.panY, label: 'Node', color };
+      g_mm.nodes.push(newNode);
+      drawMindmap(); saveMindmap();
+      showNodeEdit(newNode, cx, cy);
+    }
+  });
+
+  window.addEventListener('resize', resizeMindmapCanvas);
+})();
+
+// ═══════════════════════════════════════════════════════════════
+//  PHASE 4 — SPREADSHEET / DATA ENGINE
+// ═══════════════════════════════════════════════════════════════
+
+let g_sheetHeaders = [];
+let g_sheetData = [];   // array of row arrays
+
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (!lines.length) return;
+  const parse = line => {
+    const res = []; let cur = '', inQ = false;
+    for (const ch of line) {
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === ',' && !inQ) { res.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    res.push(cur.trim()); return res;
+  };
+  g_sheetHeaders = parse(lines[0]);
+  g_sheetData = lines.slice(1).filter(l => l.trim()).map(l => parse(l));
+  renderSheet();
+  saveSheetData();
+  populateChartSelectors();
+  showToast(`Imported ${g_sheetData.length} rows × ${g_sheetHeaders.length} columns`);
+}
+
+function renderSheet() {
+  const body = document.getElementById('wd-data-body');
+  const info = document.getElementById('wd-data-info');
+  if (!body) return;
+
+  if (!g_sheetData.length) {
+    body.innerHTML = '';
+    const zone = document.createElement('div');
+    zone.className = 'wd-paste-zone';
+    zone.id = 'wd-paste-zone';
+    zone.innerHTML = `<div class="wd-paste-text">
+      <strong>Paste CSV data here</strong><br>
+      Copy from Excel, Google Sheets, or any CSV source and paste with Ctrl+V<br>
+      <span style="font-size:10px;opacity:0.6">First row is treated as column headers · All data stays local</span>
+    </div>`;
+    body.appendChild(zone);
+    if (info) info.textContent = '';
+    wirePasteZone();
+    return;
+  }
+
+  if (info) info.textContent = `${g_sheetData.length} rows · ${g_sheetHeaders.length} columns`;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'wd-sheet-wrap';
+
+  const table = document.createElement('table');
+  table.className = 'wd-table';
+
+  // Header
+  const thead = document.createElement('thead');
+  const hr = document.createElement('tr');
+  const rowNumTh = document.createElement('th'); rowNumTh.textContent = '#'; hr.appendChild(rowNumTh);
+  g_sheetHeaders.forEach(h => { const th = document.createElement('th'); th.textContent = h; hr.appendChild(th); });
+  thead.appendChild(hr); table.appendChild(thead);
+
+  // Body — cap at 500 rows for performance
+  const tbody = document.createElement('tbody');
+  const maxRows = Math.min(g_sheetData.length, 500);
+  for (let i = 0; i < maxRows; i++) {
+    const tr = document.createElement('tr');
+    const td0 = document.createElement('td'); td0.textContent = i+1; tr.appendChild(td0);
+    g_sheetData[i].forEach(cell => { const td = document.createElement('td'); td.textContent = cell; td.title = cell; tr.appendChild(td); });
+    tbody.appendChild(tr);
+  }
+  if (g_sheetData.length > 500) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = g_sheetHeaders.length + 1;
+    td.textContent = `... ${g_sheetData.length - 500} more rows (not shown)`;
+    td.style.cssText = 'color:rgba(249,249,249,0.2);font-size:10px;text-align:center;padding:8px';
+    tr.appendChild(td); tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  body.innerHTML = ''; body.appendChild(wrap);
+}
+
+function wirePasteZone() {
+  const zone = document.getElementById('wd-paste-zone');
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) { const r = new FileReader(); r.onload = ev => parseCSV(ev.target.result); r.readAsText(file); }
+    else if (e.dataTransfer.getData('text')) parseCSV(e.dataTransfer.getData('text'));
+  });
+}
+
+function saveSheetData() {
+  try { localStorage.setItem('otap_sheet', JSON.stringify({ headers: g_sheetHeaders, data: g_sheetData.slice(0,1000) })); } catch(e) {}
+}
+
+function loadSheetData() {
+  try {
+    const raw = localStorage.getItem('otap_sheet');
+    if (!raw) { renderSheet(); wirePasteZone(); return; }
+    const d = JSON.parse(raw);
+    g_sheetHeaders = d.headers || [];
+    g_sheetData = d.data || [];
+    renderSheet();
+    if (g_sheetData.length) populateChartSelectors();
+  } catch(e) { renderSheet(); wirePasteZone(); }
+}
+
+// Global paste listener for CSV
+document.addEventListener('paste', e => {
+  if (g.appMode !== 'workdesk') return;
+  const tab = document.querySelector('[data-wdtab].active')?.dataset.wdtab;
+  if (tab !== 'data') return;
+  const text = e.clipboardData.getData('text');
+  if (text && text.includes(',')) { e.preventDefault(); parseCSV(text); }
+});
+
+document.getElementById('wd-import-btn')?.addEventListener('click', () => {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.csv,.tsv,.txt';
+  inp.onchange = () => {
+    if (!inp.files[0]) return;
+    const r = new FileReader();
+    r.onload = ev => parseCSV(ev.target.result);
+    r.readAsText(inp.files[0]);
+  };
+  inp.click();
+});
+
+document.getElementById('wd-clear-data-btn')?.addEventListener('click', () => {
+  if (!g_sheetData.length) return;
+  if (confirm('Clear all imported data?')) {
+    g_sheetHeaders = []; g_sheetData = [];
+    renderSheet(); clearChart();
+    localStorage.removeItem('otap_sheet');
+    showToast('Data cleared');
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  PHASE 4 — CHART ENGINE
+// ═══════════════════════════════════════════════════════════════
+
+function populateChartSelectors() {
+  const xSel = document.getElementById('wd-col-x');
+  const ySel = document.getElementById('wd-col-y');
+  if (!xSel || !ySel) return;
+  const opts = '<option value="">— select —</option>' +
+    g_sheetHeaders.map((h,i) => `<option value="${i}">${h}</option>`).join('');
+  xSel.innerHTML = opts;
+  ySel.innerHTML = opts;
+  // Auto-select first two columns
+  if (g_sheetHeaders.length >= 2) { xSel.value = '0'; ySel.value = '1'; }
+}
+
+document.getElementById('wd-render-chart')?.addEventListener('click', renderChart);
+document.getElementById('wd-export-chart')?.addEventListener('click', () => {
+  const canvas = document.getElementById('wd-chart-canvas');
+  if (!canvas || canvas.style.display === 'none') return;
+  const a = document.createElement('a');
+  a.download = 'otap-chart.png';
+  a.href = canvas.toDataURL();
+  a.click();
+  showToast('Chart exported as PNG');
+});
+
+function clearChart() {
+  const canvas = document.getElementById('wd-chart-canvas');
+  const noData = document.getElementById('wd-chart-no-data');
+  const stats  = document.getElementById('wd-stats-row');
+  if (canvas) canvas.style.display = 'none';
+  if (noData) noData.style.display = 'flex';
+  if (stats)  stats.innerHTML = '';
+}
+
+function renderChart() {
+  const xIdx = parseInt(document.getElementById('wd-col-x').value);
+  const yIdx = parseInt(document.getElementById('wd-col-y').value);
+  const type  = document.getElementById('wd-chart-type').value;
+
+  if (isNaN(xIdx) || isNaN(yIdx) || !g_sheetData.length) {
+    showToast('Select X and Y columns first, and import data'); return;
+  }
+
+  const canvas  = document.getElementById('wd-chart-canvas');
+  const noData  = document.getElementById('wd-chart-no-data');
+  const area    = document.getElementById('wd-chart-area');
+  const statsEl = document.getElementById('wd-stats-row');
+
+  canvas.style.display = 'block';
+  noData.style.display = 'none';
+
+  // Size canvas to area
+  const areaRect = area.getBoundingClientRect();
+  const W = Math.max(areaRect.width - 32, 400);
+  const H = Math.max(areaRect.height - 120, 280);
+  canvas.width  = W;
+  canvas.height = H;
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  // Extract data
+  const xRaw = g_sheetData.map(r => r[xIdx] || '');
+  const yRaw = g_sheetData.map(r => parseFloat(r[yIdx]));
+  const yVals = yRaw.filter(v => !isNaN(v));
+
+  if (!yVals.length) { showToast('Y column must contain numeric data'); return; }
+
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  const PAD = { top: 24, right: 24, bottom: 48, left: 60 };
+  const cW = W - PAD.left - PAD.right;
+  const cH = H - PAD.top  - PAD.bottom;
+
+  const yMin = Math.min(...yVals);
+  const yMax = Math.max(...yVals);
+  const yRange = yMax - yMin || 1;
+
+  function toY(v) { return PAD.top + cH - ((v - yMin) / yRange) * cH; }
+  function toX(i) { return PAD.left + (i / (xRaw.length - 1 || 1)) * cW; }
+
+  // Background
+  ctx.fillStyle = 'rgba(10,10,10,0.6)';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 0.5;
+  const gridLines = 5;
+  for (let i = 0; i <= gridLines; i++) {
+    const y = PAD.top + (i / gridLines) * cH;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(W - PAD.right, y); ctx.stroke();
+    // Y axis label
+    const val = yMax - (i / gridLines) * yRange;
+    ctx.fillStyle = 'rgba(249,249,249,0.25)';
+    ctx.font = '9px Courier New';
+    ctx.textAlign = 'right';
+    ctx.fillText(formatChartNum(val), PAD.left - 6, y + 3);
+  }
+
+  // X axis labels (sparse)
+  const step = Math.max(1, Math.floor(xRaw.length / 10));
+  ctx.fillStyle = 'rgba(249,249,249,0.2)';
+  ctx.font = '9px Courier New';
+  ctx.textAlign = 'center';
+  for (let i = 0; i < xRaw.length; i += step) {
+    const x = toX(i);
+    const lbl = String(xRaw[i]).slice(0, 12);
+    ctx.fillText(lbl, x, H - PAD.bottom + 14);
+  }
+
+  // Axis lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(PAD.left, PAD.top); ctx.lineTo(PAD.left, H - PAD.bottom); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(PAD.left, H - PAD.bottom); ctx.lineTo(W - PAD.right, H - PAD.bottom); ctx.stroke();
+
+  // Chart headers
+  ctx.fillStyle = 'rgba(249,249,249,0.3)';
+  ctx.font = '10px Courier New';
+  ctx.textAlign = 'left';
+  ctx.fillText(g_sheetHeaders[xIdx] + ' → ' + g_sheetHeaders[yIdx], PAD.left, 14);
+
+  // Plot
+  const hexToRgb = hex => {
+    const r = parseInt(hex.slice(1,3),16), g2 = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return `${r},${g2},${b}`;
+  };
+  const accentRgb = hexToRgb(accent);
+
+  if (type === 'bar') {
+    const barW = Math.max(2, cW / xRaw.length - 1);
+    xRaw.forEach((_, i) => {
+      const v = parseFloat(g_sheetData[i]?.[yIdx]);
+      if (isNaN(v)) return;
+      const x = PAD.left + (i / xRaw.length) * cW;
+      const y = toY(v);
+      const barH = H - PAD.bottom - y;
+      const up = v >= (yMin + yRange * 0.5);
+      ctx.fillStyle = `rgba(${up ? '122,159,106' : '224,92,92'},0.7)`;
+      ctx.fillRect(x, y, barW, barH);
+    });
+
+  } else if (type === 'scatter') {
+    xRaw.forEach((_, i) => {
+      const v = parseFloat(g_sheetData[i]?.[yIdx]);
+      if (isNaN(v)) return;
+      ctx.beginPath();
+      ctx.arc(toX(i), toY(v), 3, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${accentRgb},0.7)`;
+      ctx.fill();
+    });
+
+  } else if (type === 'line' || type === 'area') {
+    const pts = xRaw.map((_, i) => ({ x: toX(i), y: toY(parseFloat(g_sheetData[i]?.[yIdx] || 0)) }))
+      .filter((_, i) => !isNaN(parseFloat(g_sheetData[i]?.[yIdx])));
+
+    if (type === 'area') {
+      ctx.beginPath();
+      ctx.moveTo(pts[0]?.x, H - PAD.bottom);
+      pts.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.lineTo(pts[pts.length-1]?.x, H - PAD.bottom);
+      ctx.closePath();
+      ctx.fillStyle = `rgba(${accentRgb},0.1)`;
+      ctx.fill();
+    }
+
+    ctx.beginPath();
+    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    ctx.strokeStyle = `rgba(${accentRgb},0.85)`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Dots at each point (sparse)
+    const dotStep = Math.max(1, Math.floor(pts.length / 50));
+    pts.forEach((p, i) => {
+      if (i % dotStep !== 0) return;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 2.5, 0, Math.PI*2);
+      ctx.fillStyle = accent; ctx.fill();
+    });
+  }
+
+  // Stats
+  const mean = yVals.reduce((a,b) => a+b, 0) / yVals.length;
+  const sorted = [...yVals].sort((a,b) => a-b);
+  const median = sorted[Math.floor(sorted.length/2)];
+  const trend = yVals[yVals.length-1] > yVals[0];
+
+  statsEl.innerHTML = `
+    <div class="wd-stat"><div class="wd-stat-label">Min</div><div class="wd-stat-val">${formatChartNum(yMin)}</div></div>
+    <div class="wd-stat"><div class="wd-stat-label">Max</div><div class="wd-stat-val">${formatChartNum(yMax)}</div></div>
+    <div class="wd-stat"><div class="wd-stat-label">Mean</div><div class="wd-stat-val">${formatChartNum(mean)}</div></div>
+    <div class="wd-stat"><div class="wd-stat-label">Median</div><div class="wd-stat-val">${formatChartNum(median)}</div></div>
+    <div class="wd-stat"><div class="wd-stat-label">Rows</div><div class="wd-stat-val">${yVals.length}</div></div>
+    <div class="wd-stat"><div class="wd-stat-label">Trend</div><div class="wd-stat-val ${trend?'up':'down'}">${trend?'▲ Up':'▼ Down'}</div></div>
+  `;
+}
+
+function formatChartNum(n) {
+  if (Math.abs(n) >= 1e9) return (n/1e9).toFixed(2) + 'B';
+  if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(2) + 'M';
+  if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(1) + 'K';
+  return Number.isInteger(n) ? String(n) : n.toFixed(2);
+}
+
 // ── BOOT ──────────────────────────────────────────────────────────
 loadPrefs();
-// Restore pin colour toggle UI to match saved state
+// Restore pin colour toggle UI
 if (g.pinColourMode === 'source-type') {
   const btn = document.getElementById('pin-colour-toggle');
-  btn.classList.add('active');
-  btn.textContent = '● Colour: Source type';
+  if (btn) { btn.classList.add('active'); btn.textContent = '● Colour: Source type'; }
 }
 // Initialise OSINT key statuses
 updateOsintKeyStatuses();
-console.log('[OTAP] Phase 3 Dashboard ready — https://otapinitiative-lab.github.io/otap-dashboard/');
+console.log('[OTAP] Phase 4 Dashboard ready — https://otapinitiative-lab.github.io/otap-dashboard/');
 </script>
 </body>
 </html>
