@@ -6,9 +6,10 @@
 <title>OTAP DASHBOARD</title>
 <style>
 /* ═══════════════════════════════════════════════════════════════
-   OTAP DASHBOARD — Phase 1 Web Build
+   OTAP DASHBOARD — Phase 2 Web Build
    Hosted: https://otapinitiative-lab.github.io/otap-dashboard/
-   Styled to match otapinitiative.com Squarespace CSS system
+   Phase 2: Pin distinction, operator notes, multi-colour mode,
+   coord hover polish, geolocation refinement, toast system
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── SITE CSS VARIABLE SYSTEM (mirrors Squarespace custom CSS) ── */
@@ -1293,6 +1294,216 @@ html, body {
 .leaflet-control-zoom a:hover { background: var(--otap-navy-light) !important; }
 
 .custom-pin { display: flex; align-items: center; justify-content: center; }
+
+/* ═══════════════════════════════
+   PHASE 2 — NEW STYLES
+   ═══════════════════════════════ */
+
+/* ── COORD HOVER (polished) ── */
+#coord-hover {
+  font-family: var(--font);
+  letter-spacing: 0.1em;
+  font-size: 10px;
+  transition: opacity 0.15s;
+}
+
+/* ── PIN LEGEND ── */
+#pin-legend {
+  position: absolute;
+  bottom: 10px; right: 10px;
+  background: var(--otap-navy-mid);
+  border: 0.5px solid var(--otap-border);
+  border-radius: 2px;
+  padding: 8px 12px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  pointer-events: none;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 9px;
+  color: rgba(249,249,249,0.35);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-square {
+  width: 8px; height: 8px;
+  border-radius: 1px;
+  flex-shrink: 0;
+  border: 0.5px solid rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 6px;
+}
+
+.legend-diamond {
+  width: 8px; height: 8px;
+  flex-shrink: 0;
+  transform: rotate(45deg);
+  border-radius: 1px;
+}
+
+/* ── MULTI-COLOUR PIN TOGGLE ── */
+#pin-colour-toggle {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: var(--otap-navy-mid);
+  border: 0.5px solid var(--otap-border);
+  border-radius: 2px;
+  padding: 5px 10px;
+  font-family: var(--font);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(249,249,249,0.35);
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+#pin-colour-toggle:hover { border-color: var(--accent); color: var(--accent); }
+#pin-colour-toggle.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+/* ── TOAST NOTIFICATION ── */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--otap-navy-mid);
+  border: 0.5px solid var(--otap-border);
+  border-left: 2px solid var(--accent);
+  border-radius: 2px;
+  padding: 10px 18px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: rgba(249,249,249,0.7);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── OPERATOR NOTES ── */
+.op-notes-section {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 0.5px solid var(--otap-border);
+  flex-shrink: 0;
+}
+
+.op-notes-label {
+  font-size: 10px;
+  color: rgba(249,249,249,0.25);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.op-notes-input {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid var(--otap-border);
+  border-radius: 2px;
+  padding: 8px 10px;
+  font-family: var(--font);
+  font-size: 11px;
+  color: var(--otap-white);
+  outline: none;
+  resize: none;
+  height: 60px;
+  transition: border-color 0.15s;
+  line-height: 1.6;
+}
+
+.op-notes-input:focus { border-color: var(--accent); }
+.op-notes-input::placeholder { color: rgba(249,249,249,0.15); }
+
+.op-notes-save {
+  margin-top: 5px;
+  padding: 5px 12px;
+  background: transparent;
+  border: 0.5px solid rgba(122,159,106,0.4);
+  border-radius: 2px;
+  font-family: var(--font);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--otap-green);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.op-notes-save:hover { background: var(--otap-green); color: var(--otap-navy); border-color: var(--otap-green); }
+
+.op-notes-saved-label {
+  font-size: 10px;
+  color: var(--otap-green);
+  letter-spacing: 0.08em;
+  margin-left: 8px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  display: inline;
+}
+
+.op-notes-saved-label.show { opacity: 1; }
+
+.op-notes-display {
+  font-size: 11px;
+  color: rgba(249,249,249,0.45);
+  line-height: 1.6;
+  font-style: italic;
+  padding: 6px 0;
+  border-top: 0.5px solid var(--otap-border);
+  margin-top: 6px;
+  display: none;
+}
+
+/* ── SOURCE CARD — PRIMARY badge ── */
+.source-primary-badge {
+  display: inline-block;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 0.5px solid var(--accent-dim);
+  border-radius: 2px;
+  padding: 1px 5px;
+  margin-left: 6px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+/* ── HEADLINE in intel tab ── */
+.pin-headline {
+  font-size: 11px;
+  color: rgba(249,249,249,0.4);
+  line-height: 1.6;
+  margin-bottom: 10px;
+  font-style: italic;
+  padding-bottom: 10px;
+  border-bottom: 0.5px solid var(--otap-border);
+}
 </style>
 </head>
 <body>
@@ -1383,7 +1594,32 @@ html, body {
     <div id="leaflet-map"></div>
     <div id="coord-hover"></div>
 
+    <!-- Pin colour mode toggle -->
+    <div id="pin-colour-toggle">&#9679; Colour: Severity</div>
+
+    <!-- Pin legend -->
+    <div id="pin-legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#e05c5c;box-shadow:0 0 4px #e05c5c66"></div>
+        High severity (4+)
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#c5a267;box-shadow:0 0 4px #c5a26766"></div>
+        Standard
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--accent);box-shadow:0 0 4px rgba(var(--accent-rgb),0.4)"></div>
+        Primary source
+      </div>
+      <div class="legend-item">
+        <div class="legend-square">⚓</div>
+        Maritime
+      </div>
+    </div>
   </div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
 
   <div id="sidebar">
     <div class="sb-header">
@@ -1421,11 +1657,22 @@ html, body {
         <div class="intel-pin-detail" id="intel-pin-detail" style="display:none">
           <div class="pin-city" id="pin-city"></div>
           <div id="pin-country-wrap"></div>
+          <div class="pin-headline" id="pin-headline" style="display:none"></div>
           <div class="pin-src-count" id="pin-src-count"></div>
           <div class="sources-label">Sources</div>
           <div class="sources-divider"></div>
           <div class="sources-list" id="sources-list"></div>
           <div class="scroll-hint" id="sources-scroll-hint" style="display:none">Scroll for more</div>
+          <!-- Operator Notes -->
+          <div class="op-notes-section" id="op-notes-section">
+            <div class="op-notes-label">Operator Notes</div>
+            <div class="op-notes-display" id="op-notes-display"></div>
+            <textarea class="op-notes-input" id="op-notes-input" placeholder="Add a note for this location..."></textarea>
+            <div>
+              <button class="op-notes-save" id="op-notes-save">Save Note</button>
+              <span class="op-notes-saved-label" id="op-notes-saved">Saved</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1589,6 +1836,9 @@ let g = {
   activeTab:'intel', activeDashboard:-1,
   modeMenuOpen:false, isSyncing:false, appMode:'map',
   extDashboards:[], leafletMap:null, markers:[], bordersLayer:null,
+  // Phase 2
+  pinColourMode: 'severity',   // 'severity' | 'source-type'
+  operatorNotes: {},            // { "lat,lon": "note text" }
 };
 
 // ── THEME ─────────────────────────────────────────────────────────
@@ -1598,11 +1848,15 @@ function applyThemeClass(cls) {
   g.currentThemeCls = cls;
   const t = SITE_THEME_MAP[cls];
   document.getElementById('theme-label').textContent = t ? t.dashName : cls;
-  // Update border layer if map is loaded
+  // Update border layer colour
   if (g.bordersLayer && g.leafletMap) {
     const c = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
     g.bordersLayer.setStyle({ color: hexToRgba(c, 0.18) });
   }
+  // Refresh pins so accent-coloured primary pins update
+  if (g.markers.length > 0) { renderPins(); }
+  // Refresh legend colours
+  if (document.getElementById('pin-legend')) updateLegend();
 }
 
 function hexToRgba(hex, alpha) {
@@ -1623,9 +1877,7 @@ function cycleTheme() {
 function loadPrefs() {
   // 1. Inherit site's active theme from localStorage (otap_user_pref)
   const siteTheme = localStorage.getItem('otap_user_pref');
-  if (siteTheme && SITE_THEME_MAP[siteTheme]) {
-    applyThemeClass(siteTheme);
-  }
+  if (siteTheme && SITE_THEME_MAP[siteTheme]) applyThemeClass(siteTheme);
 
   // 2. Load dashboard-specific prefs
   try {
@@ -1633,16 +1885,14 @@ function loadPrefs() {
     if (!raw) return;
     const p = JSON.parse(raw);
     if (p.rememberMe && p.key) {
-      g.accessKey = p.key;
-      g.rememberMe = true;
+      g.accessKey = p.key; g.rememberMe = true;
       document.getElementById('key-input').value = p.key;
       updateLoginBtn();
       document.getElementById('remember-check').classList.add('checked');
     }
-    // Theme override if set in dashboard (overrides site pref)
-    if (p.theme && SITE_THEME_MAP[p.theme]) {
-      applyThemeClass(p.theme);
-    }
+    if (p.theme && SITE_THEME_MAP[p.theme]) applyThemeClass(p.theme);
+    if (p.pinColourMode) g.pinColourMode = p.pinColourMode;
+    if (p.operatorNotes) g.operatorNotes = p.operatorNotes;
   } catch(e) {}
 }
 
@@ -1652,8 +1902,9 @@ function savePrefs() {
       rememberMe: g.rememberMe,
       key: g.rememberMe ? g.accessKey : '',
       theme: g.currentThemeCls,
+      pinColourMode: g.pinColourMode,
+      operatorNotes: g.operatorNotes,
     }));
-    // Also update site pref so Squarespace stays in sync
     localStorage.setItem('otap_user_pref', g.currentThemeCls);
   } catch(e) {}
 }
@@ -1778,22 +2029,53 @@ function expiryLabel(src) {
   return `${hours}h ${Math.floor((secs%3600)/60)}m`;
 }
 
+// Primary source outlets — used for pin distinction
+const PRIMARY_OUTLETS = new Set([
+  'PRIMARY','OTAP','OTAP PRIMARY','PRIMARY SOURCE',
+]);
+
+// News outlets known to be news (not primary) — used for source type pin mode
+const NEWS_FACTUALITY = new Set(['Very High','High','OTAP Accepted']);
+
+function isSourcePrimary(src) {
+  return src.country === 'PRIMARY' ||
+    PRIMARY_OUTLETS.has((src.outletName||'').toUpperCase()) ||
+    (src.factuality||'').toUpperCase().includes('PRIMARY');
+}
+
+// Russia/US dedup fix: known city→country mappings to prevent
+// identical lat/lon collisions from scraper alphabetical cap issue
+const COUNTRY_CITY_OVERRIDES = {
+  'Russia': { lat: 55.7558, lon: 37.6176 },   // Moscow
+  'United States': { lat: 38.8951, lon: -77.0364 }, // Washington DC
+};
+
 function parseReports(data) {
   if (data.user) { g.userName = data.user; document.getElementById('sb-opr').textContent = `OPR: ${data.user}`; }
   g.clearance = data.clearance || 'standard';
   if (!Array.isArray(data.reports)) return;
-  const now = Math.floor(Date.now()/1000);
   g.reports = data.reports.map(item => {
     let lat = parseFloat(item.lat)||0, lon = parseFloat(item.lon)||0;
     if (lat<-90||lat>90) lat=0; if (lon<-180||lon>180) lon=0;
+
+    // Russia/US dedup: if lat/lon is exactly 0,0 or clearly wrong, apply override
+    const country = item.country || 'Unknown';
+    if ((lat === 0 && lon === 0) && COUNTRY_CITY_OVERRIDES[country]) {
+      lat = COUNTRY_CITY_OVERRIDES[country].lat;
+      lon = COUNTRY_CITY_OVERRIDES[country].lon;
+    }
+
     const sources = (item.sources||[]).map(s => ({
       outletName: s.name||'Unknown Outlet', url:s.url||'',
       factuality: s.factuality||'Unknown',
       expiresAt: s.expiresAt ? offsetToExpiry(s.expiresAt) : 0,
+      isPrimary: !!(s.factuality||'').toUpperCase().includes('PRIMARY') ||
+                 PRIMARY_OUTLETS.has((s.name||'').toUpperCase()),
     }));
+    const hasPrimary = sources.some(s => s.isPrimary);
     return { city:item.city||'Unknown', headline:item.headline||'',
-             country:item.country||'Unknown', severity:parseInt(item.severity)||1,
-             lat, lon, sources };
+             country, severity:parseInt(item.severity)||1,
+             lat, lon, sources, hasPrimary };
   });
 }
 
@@ -1805,9 +2087,15 @@ function getPinsFromReports() {
     if (!anyLive) continue;
     let match = pins.find(p=>Math.abs(p.lat-r.lat)<0.001&&Math.abs(p.lon-r.lon)<0.001);
     if (!match) {
-      match = {lat:r.lat,lon:r.lon,city:r.city,country:r.country,maxSeverity:r.severity,sources:[]};
+      match = { lat:r.lat, lon:r.lon, city:r.city, country:r.country,
+                maxSeverity:r.severity, sources:[], hasPrimary:r.hasPrimary,
+                headlines:r.headline ? [r.headline] : [] };
       pins.push(match);
-    } else if (r.severity > match.maxSeverity) match.maxSeverity = r.severity;
+    } else {
+      if (r.severity > match.maxSeverity) match.maxSeverity = r.severity;
+      if (r.hasPrimary) match.hasPrimary = true;
+      if (r.headline && !match.headlines.includes(r.headline)) match.headlines.push(r.headline);
+    }
     for (const s of r.sources) {
       if (s.expiresAt&&s.expiresAt<=now) continue;
       if (!match.sources.find(e=>e.outletName===s.outletName)) match.sources.push(s);
@@ -1877,25 +2165,76 @@ async function loadBorders() {
   } catch(e) { console.warn('[BORDERS]', e.message); }
 }
 
+function getPinColour(pin) {
+  if (pin.country === 'MARITIME') return null; // handled separately
+
+  if (g.pinColourMode === 'source-type') {
+    // Source-type mode: accent = primary, amber = news, grey = unverified
+    if (pin.hasPrimary) {
+      return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    }
+    const hasVerified = pin.sources.some(s => NEWS_FACTUALITY.has(s.factuality));
+    return hasVerified ? '#c5a267' : 'rgba(249,249,249,0.3)';
+  }
+
+  // Severity mode (default): red = high, amber = standard, accent = primary
+  if (pin.hasPrimary) {
+    return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  }
+  return pin.maxSeverity >= 4 ? '#e05c5c' : '#c5a267';
+}
+
 function renderPins() {
   g.markers.forEach(m=>m.remove()); g.markers=[];
   for (const pin of g.pins) {
-    const isMaritime = pin.country==='MARITIME';
-    const isHigh = pin.maxSeverity>=4;
+    const isMaritime = pin.country === 'MARITIME';
     let icon;
+
     if (isMaritime) {
       icon = L.divIcon({ className:'custom-pin',
         html:`<div style="width:18px;height:18px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.3);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:11px;">⚓</div>`,
         iconSize:[18,18], iconAnchor:[9,9] });
     } else {
-      const color = isHigh ? '#e05c5c' : '#c5a267';
-      icon = L.divIcon({ className:'custom-pin',
-        html:`<div style="width:10px;height:10px;background:${color};border-radius:50%;border:1.5px solid rgba(0,0,0,0.4);box-shadow:0 0 6px ${color}66;"></div>`,
-        iconSize:[10,10], iconAnchor:[5,5] });
+      const color = getPinColour(pin);
+      // Primary sources get a diamond shape; news/standard get a circle
+      if (pin.hasPrimary) {
+        icon = L.divIcon({ className:'custom-pin',
+          html:`<div style="width:10px;height:10px;background:${color};transform:rotate(45deg);border-radius:1px;box-shadow:0 0 6px ${color}88;"></div>`,
+          iconSize:[14,14], iconAnchor:[7,7] });
+      } else {
+        icon = L.divIcon({ className:'custom-pin',
+          html:`<div style="width:10px;height:10px;background:${color};border-radius:50%;border:1.5px solid rgba(0,0,0,0.4);box-shadow:0 0 6px ${color}66;"></div>`,
+          iconSize:[10,10], iconAnchor:[5,5] });
+      }
     }
+
     const m = L.marker([pin.lat,pin.lon],{icon}).addTo(g.leafletMap);
     m.on('click', ()=>selectPin(pin));
     g.markers.push(m);
+  }
+
+  // Update legend to reflect current mode
+  updateLegend();
+}
+
+function updateLegend() {
+  const legend = document.getElementById('pin-legend');
+  if (g.pinColourMode === 'source-type') {
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    legend.innerHTML = `
+      <div class="legend-item"><div class="legend-diamond" style="background:${accent};box-shadow:0 0 4px ${accent}88"></div>Primary source</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#c5a267"></div>Verified news</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(249,249,249,0.3)"></div>Unverified</div>
+      <div class="legend-item"><div class="legend-square">⚓</div>Maritime</div>
+    `;
+  } else {
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    legend.innerHTML = `
+      <div class="legend-item"><div class="legend-dot" style="background:#e05c5c;box-shadow:0 0 4px #e05c5c66"></div>High severity (4+)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#c5a267"></div>Standard</div>
+      <div class="legend-item"><div class="legend-diamond" style="background:${accent};box-shadow:0 0 4px ${accent}88"></div>Primary source</div>
+      <div class="legend-item"><div class="legend-square">⚓</div>Maritime</div>
+    `;
   }
 }
 
@@ -1904,6 +2243,8 @@ function selectPin(pin) {
 }
 
 // ── INTEL TAB ────────────────────────────────────────────────────
+function pinNoteKey(pin) { return `${pin.lat.toFixed(4)},${pin.lon.toFixed(4)}`; }
+
 function renderIntelTab() {
   const placeholder = document.getElementById('intel-placeholder');
   const detail = document.getElementById('intel-pin-detail');
@@ -1912,13 +2253,23 @@ function renderIntelTab() {
   }
   placeholder.style.display='none'; detail.style.display='flex';
   const pin = g.selectedPin;
+
   document.getElementById('pin-city').textContent = pin.city;
   const cw = document.getElementById('pin-country-wrap');
   cw.innerHTML = pin.country==='MARITIME'
     ? '<div class="maritime-badge">Maritime</div>'
-    : `<div class="pin-country">${pin.country}</div>`;
+    : `<div class="pin-country">${esc(pin.country)}</div>`;
+
+  // Headline
+  const hlEl = document.getElementById('pin-headline');
+  if (pin.headlines && pin.headlines.length > 0) {
+    hlEl.textContent = pin.headlines[0];
+    hlEl.style.display = 'block';
+  } else { hlEl.style.display = 'none'; }
+
   document.getElementById('pin-src-count').textContent =
     `${pin.sources.length} Source${pin.sources.length!==1?'s':''}`;
+
   const list = document.getElementById('sources-list');
   list.innerHTML='';
   pin.sources.forEach((s,i)=>{
@@ -1927,10 +2278,13 @@ function renderIntelTab() {
     const expLbl = expiryLabel(s);
     const expSoon = secondsUntilExpiry(s)<86400*4&&secondsUntilExpiry(s)>0;
     const expColor = expSoon ? '#e05c5c' : '#c5a267';
+    const isPrimary = s.isPrimary ||
+      (s.factuality||'').toUpperCase().includes('PRIMARY') ||
+      PRIMARY_OUTLETS.has((s.outletName||'').toUpperCase());
     const card = document.createElement('div');
     card.className = 'source-card'+(isExp?' expanded':'');
     card.innerHTML=`
-      <div class="source-name">${esc(s.outletName)}</div>
+      <div class="source-name">${esc(s.outletName)}${isPrimary?'<span class="source-primary-badge">Primary</span>':''}</div>
       <div class="source-fact ${ver?'verified':'unverified'}">${ver?s.factuality:'Unverified'}</div>
       ${expLbl?`<div class="expiry-badge" style="background:rgba(${expSoon?'224,92,92':'197,162,103'},0.1);border:0.5px solid ${expColor};color:${expColor}">${expLbl}</div>`:''}
       <div class="source-url">${esc(s.url)}</div>
@@ -1944,8 +2298,21 @@ function renderIntelTab() {
     });
     list.appendChild(card);
   });
+
   const hint = document.getElementById('sources-scroll-hint');
   hint.style.display = list.scrollHeight>list.clientHeight?'block':'none';
+
+  // Operator notes
+  const noteKey = pinNoteKey(pin);
+  const existingNote = g.operatorNotes[noteKey] || '';
+  const notesInput = document.getElementById('op-notes-input');
+  const notesDisplay = document.getElementById('op-notes-display');
+  notesInput.value = existingNote;
+  if (existingNote) {
+    notesDisplay.textContent = existingNote;
+    notesDisplay.style.display = 'block';
+  } else { notesDisplay.style.display = 'none'; }
+  document.getElementById('op-notes-saved').classList.remove('show');
 }
 
 // ── COUNTRIES TAB ─────────────────────────────────────────────────
@@ -2182,9 +2549,55 @@ document.getElementById('sb-status').addEventListener('click',()=>{ if(!g.isSync
 // ── UTIL ──────────────────────────────────────────────────────────
 function esc(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// ── PHASE 2 — OPERATOR NOTES ─────────────────────────────────────
+document.getElementById('op-notes-save').addEventListener('click', () => {
+  if (!g.selectedPin) return;
+  const key = pinNoteKey(g.selectedPin);
+  const val = document.getElementById('op-notes-input').value.trim();
+  if (val) g.operatorNotes[key] = val;
+  else delete g.operatorNotes[key];
+  savePrefs();
+  const savedLabel = document.getElementById('op-notes-saved');
+  const display = document.getElementById('op-notes-display');
+  if (val) { display.textContent = val; display.style.display = 'block'; }
+  else { display.style.display = 'none'; }
+  savedLabel.classList.add('show');
+  setTimeout(() => savedLabel.classList.remove('show'), 2000);
+  showToast('Note saved');
+});
+
+// ── PHASE 2 — PIN COLOUR TOGGLE ──────────────────────────────────
+document.getElementById('pin-colour-toggle').addEventListener('click', () => {
+  g.pinColourMode = g.pinColourMode === 'severity' ? 'source-type' : 'severity';
+  const btn = document.getElementById('pin-colour-toggle');
+  btn.classList.toggle('active', g.pinColourMode === 'source-type');
+  btn.textContent = g.pinColourMode === 'severity'
+    ? '● Colour: Severity'
+    : '● Colour: Source type';
+  renderPins();
+  savePrefs();
+  showToast(`Pin colour: ${g.pinColourMode === 'severity' ? 'Severity mode' : 'Source type mode'}`);
+});
+
+// ── PHASE 2 — TOAST SYSTEM ───────────────────────────────────────
+let _toastTimer = null;
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
 // ── BOOT ──────────────────────────────────────────────────────────
 loadPrefs();
-console.log('[OTAP] Dashboard ready — https://otapinitiative-lab.github.io/otap-dashboard/');
+// Restore pin colour toggle UI to match saved state
+if (g.pinColourMode === 'source-type') {
+  const btn = document.getElementById('pin-colour-toggle');
+  btn.classList.add('active');
+  btn.textContent = '● Colour: Source type';
+}
+console.log('[OTAP] Phase 2 Dashboard ready — https://otapinitiative-lab.github.io/otap-dashboard/');
 </script>
 </body>
 </html>
