@@ -2252,8 +2252,156 @@ html, body {
     </div>
   </div>
 
-  <!-- Toast -->
-  <div id="toast"></div>
+
+  <div id="sidebar">
+    <div class="sb-header">
+      <div class="sb-mode-label" id="sb-mode-label">[ MAP ]</div>
+      <div class="sb-title-row">
+        <div class="sb-title">OTAP Dashboard</div>
+        <div class="sb-wc">
+          <div class="wc-btn" id="btn-minimize" title="Minimise">—</div>
+          <div class="wc-btn" id="btn-fullscreen" title="Fullscreen">&#9633;</div>
+          <div class="wc-btn close" id="btn-close" title="Close">&#215;</div>
+        </div>
+      </div>
+      <div class="sb-opr" id="sb-opr">OPR: Operator</div>
+      <div class="sb-status" id="sb-status">Status: Online</div>
+      <div class="sync-bar-wrap" id="sync-bar-wrap" style="display:none">
+        <div class="sync-bar-fill" id="sync-bar-fill"></div>
+      </div>
+      <div class="sb-divider"></div>
+    </div>
+
+    <div class="sb-tabs">
+      <button class="tab-btn active" data-tab="intel">Intel</button>
+      <button class="tab-btn" data-tab="countries">Countries</button>
+      <button class="tab-btn" data-tab="ext">Ext</button>
+    </div>
+    <div class="tab-divider"></div>
+
+    <div class="sb-content">
+      <!-- INTEL -->
+      <div class="tab-pane active" id="tab-intel">
+        <div class="intel-placeholder" id="intel-placeholder">
+          <div class="intel-placeholder-dot"></div>
+          Scanning global intel...
+        </div>
+        <div class="intel-pin-detail" id="intel-pin-detail" style="display:none">
+          <div class="pin-city" id="pin-city"></div>
+          <div id="pin-country-wrap"></div>
+          <div class="pin-headline" id="pin-headline" style="display:none"></div>
+          <div class="pin-src-count" id="pin-src-count"></div>
+          <div class="sources-label">Sources</div>
+          <div class="sources-divider"></div>
+          <div class="sources-list" id="sources-list"></div>
+          <div class="scroll-hint" id="sources-scroll-hint" style="display:none">Scroll for more</div>
+          <!-- Operator Notes -->
+          <div class="op-notes-section" id="op-notes-section">
+            <div class="op-notes-label">Operator Notes</div>
+            <div class="op-notes-display" id="op-notes-display"></div>
+            <textarea class="op-notes-input" id="op-notes-input" placeholder="Add a note for this location..."></textarea>
+            <div>
+              <button class="op-notes-save" id="op-notes-save">Save Note</button>
+              <span class="op-notes-saved-label" id="op-notes-saved">Saved</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COUNTRIES -->
+      <div class="tab-pane" id="tab-countries">
+        <div class="ctry-header">
+          <div class="ctry-label">Filter by Country</div>
+          <div class="ctry-btns">
+            <button class="ctry-btn" id="ctry-select-all">Select All</button>
+            <button class="ctry-btn clear" id="ctry-clear-all">Clear All</button>
+          </div>
+        </div>
+        <div class="ctry-divider"></div>
+        <div class="ctry-list" id="ctry-list"></div>
+        <div class="ctry-status inactive" id="ctry-status">No filter — showing by region</div>
+      </div>
+
+      <!-- EXT -->
+      <div class="tab-pane" id="tab-ext">
+        <div class="ext-header">
+          <div class="ext-title">External Dashboards</div>
+        </div>
+        <div class="ext-divider"></div>
+        <div class="ext-list" id="ext-list"></div>
+        <div id="ext-add-form">
+          <div class="ext-form-title">Add External Dashboard</div>
+          <div class="asp-field">
+            <div class="asp-label">Name</div>
+            <input class="asp-input" id="ext-name-input" placeholder="e.g. Digital Embassy">
+          </div>
+          <div class="asp-field">
+            <div class="asp-label">URL</div>
+            <input class="asp-input" id="ext-url-input" placeholder="https://">
+          </div>
+          <button class="asp-submit" id="ext-add-submit" disabled>Add Dashboard</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom -->
+    <div class="sb-bottom">
+      <button class="bottom-btn mode-btn" id="btn-mode">&#62; Mode</button>
+      <button class="bottom-btn ctry-btn" id="btn-countries">Countries</button>
+      <button class="bottom-btn add-btn" id="btn-add-src">+</button>
+      <div id="mode-unfurl">
+        <div class="unfurl-item unfurl-theatre" id="unfurl-theatre">&#60; Theatre</div>
+        <div class="unfurl-item unfurl-mode" id="unfurl-mode">&#60; Mode Select</div>
+        <div class="unfurl-item unfurl-theme" id="unfurl-theme">&#60; Theme: <span id="theme-label">Tactical</span> &#62;</div>
+      </div>
+    </div>
+
+    <div id="access-denied-popup">
+      <div class="ad-title">Access Denied</div>
+      <div class="ad-sub">Admin clearance required</div>
+    </div>
+
+    <div id="add-source-panel">
+      <button class="asp-close" id="asp-close-btn">&#215;</button>
+      <div class="asp-title">Add Primary Source</div>
+      <div class="asp-field">
+        <div class="asp-label">Location</div>
+        <input class="asp-input" id="asp-location" placeholder="City, Country">
+      </div>
+      <div class="asp-field">
+        <div class="asp-label">Source Name</div>
+        <input class="asp-input" id="asp-name" placeholder="Source name">
+      </div>
+      <div class="asp-field">
+        <div class="asp-label">URL</div>
+        <input class="asp-input" id="asp-url" placeholder="https://">
+      </div>
+      <div class="asp-field">
+        <div class="asp-label">Factuality</div>
+        <select class="asp-input" id="asp-factuality" style="cursor:pointer">
+          <option value="Very High">Very High</option>
+          <option value="High">High</option>
+          <option value="OTAP Accepted">OTAP Accepted</option>
+          <option value="Unverified">Unverified</option>
+        </select>
+      </div>
+      <div class="asp-field">
+        <div class="asp-label">Expires</div>
+        <select class="asp-input" id="asp-expires" style="cursor:pointer">
+          <option value="4d">4 days</option>
+          <option value="2w">2 weeks</option>
+          <option value="1m">1 month</option>
+          <option value="3m">3 months</option>
+          <option value="6m">6 months</option>
+          <option value="1y">1 year</option>
+        </select>
+      </div>
+      <button class="asp-submit" id="asp-submit-btn">Upload Source</button>
+      <div id="asp-status" style="margin-top:10px;font-size:11px;color:rgba(249,249,249,0.3);letter-spacing:0.06em;"></div>
+    </div>
+  </div>
+
+</div>
 
 <!-- OSINT SCREEN -->
 <div id="screen-osint" class="screen">
@@ -2460,154 +2608,9 @@ html, body {
 
 </div>
 
-  <div id="sidebar">
-    <div class="sb-header">
-      <div class="sb-mode-label" id="sb-mode-label">[ MAP ]</div>
-      <div class="sb-title-row">
-        <div class="sb-title">OTAP Dashboard</div>
-        <div class="sb-wc">
-          <div class="wc-btn" id="btn-minimize" title="Minimise">—</div>
-          <div class="wc-btn" id="btn-fullscreen" title="Fullscreen">&#9633;</div>
-          <div class="wc-btn close" id="btn-close" title="Close">&#215;</div>
-        </div>
-      </div>
-      <div class="sb-opr" id="sb-opr">OPR: Operator</div>
-      <div class="sb-status" id="sb-status">Status: Online</div>
-      <div class="sync-bar-wrap" id="sync-bar-wrap" style="display:none">
-        <div class="sync-bar-fill" id="sync-bar-fill"></div>
-      </div>
-      <div class="sb-divider"></div>
-    </div>
 
-    <div class="sb-tabs">
-      <button class="tab-btn active" data-tab="intel">Intel</button>
-      <button class="tab-btn" data-tab="countries">Countries</button>
-      <button class="tab-btn" data-tab="ext">Ext</button>
-    </div>
-    <div class="tab-divider"></div>
-
-    <div class="sb-content">
-      <!-- INTEL -->
-      <div class="tab-pane active" id="tab-intel">
-        <div class="intel-placeholder" id="intel-placeholder">
-          <div class="intel-placeholder-dot"></div>
-          Scanning global intel...
-        </div>
-        <div class="intel-pin-detail" id="intel-pin-detail" style="display:none">
-          <div class="pin-city" id="pin-city"></div>
-          <div id="pin-country-wrap"></div>
-          <div class="pin-headline" id="pin-headline" style="display:none"></div>
-          <div class="pin-src-count" id="pin-src-count"></div>
-          <div class="sources-label">Sources</div>
-          <div class="sources-divider"></div>
-          <div class="sources-list" id="sources-list"></div>
-          <div class="scroll-hint" id="sources-scroll-hint" style="display:none">Scroll for more</div>
-          <!-- Operator Notes -->
-          <div class="op-notes-section" id="op-notes-section">
-            <div class="op-notes-label">Operator Notes</div>
-            <div class="op-notes-display" id="op-notes-display"></div>
-            <textarea class="op-notes-input" id="op-notes-input" placeholder="Add a note for this location..."></textarea>
-            <div>
-              <button class="op-notes-save" id="op-notes-save">Save Note</button>
-              <span class="op-notes-saved-label" id="op-notes-saved">Saved</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- COUNTRIES -->
-      <div class="tab-pane" id="tab-countries">
-        <div class="ctry-header">
-          <div class="ctry-label">Filter by Country</div>
-          <div class="ctry-btns">
-            <button class="ctry-btn" id="ctry-select-all">Select All</button>
-            <button class="ctry-btn clear" id="ctry-clear-all">Clear All</button>
-          </div>
-        </div>
-        <div class="ctry-divider"></div>
-        <div class="ctry-list" id="ctry-list"></div>
-        <div class="ctry-status inactive" id="ctry-status">No filter — showing by region</div>
-      </div>
-
-      <!-- EXT -->
-      <div class="tab-pane" id="tab-ext">
-        <div class="ext-header">
-          <div class="ext-title">External Dashboards</div>
-        </div>
-        <div class="ext-divider"></div>
-        <div class="ext-list" id="ext-list"></div>
-        <div id="ext-add-form">
-          <div class="ext-form-title">Add External Dashboard</div>
-          <div class="asp-field">
-            <div class="asp-label">Name</div>
-            <input class="asp-input" id="ext-name-input" placeholder="e.g. Digital Embassy">
-          </div>
-          <div class="asp-field">
-            <div class="asp-label">URL</div>
-            <input class="asp-input" id="ext-url-input" placeholder="https://">
-          </div>
-          <button class="asp-submit" id="ext-add-submit" disabled>Add Dashboard</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bottom -->
-    <div class="sb-bottom">
-      <button class="bottom-btn mode-btn" id="btn-mode">&#62; Mode</button>
-      <button class="bottom-btn ctry-btn" id="btn-countries">Countries</button>
-      <button class="bottom-btn add-btn" id="btn-add-src">+</button>
-      <div id="mode-unfurl">
-        <div class="unfurl-item unfurl-theatre" id="unfurl-theatre">&#60; Theatre</div>
-        <div class="unfurl-item unfurl-mode" id="unfurl-mode">&#60; Mode Select</div>
-        <div class="unfurl-item unfurl-theme" id="unfurl-theme">&#60; Theme: <span id="theme-label">Tactical</span> &#62;</div>
-      </div>
-    </div>
-
-    <div id="access-denied-popup">
-      <div class="ad-title">Access Denied</div>
-      <div class="ad-sub">Admin clearance required</div>
-    </div>
-
-    <div id="add-source-panel">
-      <button class="asp-close" id="asp-close-btn">&#215;</button>
-      <div class="asp-title">Add Primary Source</div>
-      <div class="asp-field">
-        <div class="asp-label">Location</div>
-        <input class="asp-input" id="asp-location" placeholder="City, Country">
-      </div>
-      <div class="asp-field">
-        <div class="asp-label">Source Name</div>
-        <input class="asp-input" id="asp-name" placeholder="Source name">
-      </div>
-      <div class="asp-field">
-        <div class="asp-label">URL</div>
-        <input class="asp-input" id="asp-url" placeholder="https://">
-      </div>
-      <div class="asp-field">
-        <div class="asp-label">Factuality</div>
-        <select class="asp-input" id="asp-factuality" style="cursor:pointer">
-          <option value="Very High">Very High</option>
-          <option value="High">High</option>
-          <option value="OTAP Accepted">OTAP Accepted</option>
-          <option value="Unverified">Unverified</option>
-        </select>
-      </div>
-      <div class="asp-field">
-        <div class="asp-label">Expires</div>
-        <select class="asp-input" id="asp-expires" style="cursor:pointer">
-          <option value="4d">4 days</option>
-          <option value="2w">2 weeks</option>
-          <option value="1m">1 month</option>
-          <option value="3m">3 months</option>
-          <option value="6m">6 months</option>
-          <option value="1y">1 year</option>
-        </select>
-      </div>
-      <button class="asp-submit" id="asp-submit-btn">Upload Source</button>
-      <div id="asp-status" style="margin-top:10px;font-size:11px;color:rgba(249,249,249,0.3);letter-spacing:0.06em;"></div>
-    </div>
-  </div>
-</div>
+<!-- Toast -->
+<div id="toast"></div>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
