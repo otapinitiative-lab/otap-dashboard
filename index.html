@@ -1010,7 +1010,6 @@ html, body {
 }
 
 .ext-card:hover { background: rgba(255,255,255,0.02); }
-.ext-card.active { border-left-color: var(--accent); background: rgba(255,255,255,0.02); }
 
 .ext-card-left { flex: 1; min-width: 0; }
 
@@ -1023,7 +1022,7 @@ html, body {
   transition: color 0.15s;
 }
 
-.ext-card.active .ext-card-name { color: var(--accent); }
+.ext-card:hover .ext-card-name { color: var(--accent); }
 
 .ext-card-url {
   font-size: 10px;
@@ -1042,7 +1041,6 @@ html, body {
   margin-left: 10px;
 }
 
-.ext-card.active .ext-arrow,
 .ext-card:hover .ext-arrow { color: var(--accent); }
 
 .ext-rm-btn {
@@ -1062,49 +1060,6 @@ html, body {
 }
 
 .ext-rm-btn:hover { background: #e05c5c; color: #fff; border-color: #e05c5c; }
-
-.ext-back-btn {
-  margin: 6px 25px 8px;
-  padding: 10px;
-  background: transparent;
-  border: 0.5px solid var(--otap-border);
-  border-radius: 2px;
-  font-family: var(--font);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent);
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.15s;
-  display: none;
-  flex-shrink: 0;
-}
-
-.ext-back-btn:hover { background: var(--accent); color: var(--otap-navy); border-color: var(--accent); }
-
-#webview-overlay {
-  position: absolute; inset: 0;
-  z-index: 100; display: none;
-  background: var(--otap-navy);
-}
-
-#webview-overlay iframe { width: 100%; height: 100%; border: none; }
-
-#ext-loading {
-  position: absolute; inset: 0;
-  background: var(--otap-navy);
-  display: none; align-items: center; justify-content: center;
-  z-index: 150; flex-direction: column; gap: 16px;
-}
-
-.ext-loading-text {
-  font-size: 11px;
-  color: var(--accent);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  animation: blink 1.2s ease-in-out infinite;
-}
 
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
@@ -1427,13 +1382,7 @@ html, body {
   <div id="map-area">
     <div id="leaflet-map"></div>
     <div id="coord-hover"></div>
-    <div id="webview-overlay">
-      <div id="ext-loading">
-        <div class="ext-loading-text">Loading External Dashboard...</div>
-      </div>
-      <iframe id="ext-iframe" src="about:blank"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
-    </div>
+
   </div>
 
   <div id="sidebar">
@@ -1513,7 +1462,6 @@ html, body {
           </div>
           <button class="asp-submit" id="ext-add-submit" disabled>Add Dashboard</button>
         </div>
-        <button class="ext-back-btn" id="ext-back-btn">&#8592; Back to Map</button>
       </div>
     </div>
 
@@ -1898,8 +1846,9 @@ function initMap() {
     maxBounds:[[-85,-Infinity],[85,Infinity]],
   });
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
-    subdomains:'abcd', maxZoom:19,
+  // Stadia Alidade Smooth Dark — accurate state/province borders, no API key required
+  L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',{
+    maxZoom:20,
   }).addTo(g.leafletMap);
 
   g.leafletMap.on('mousemove', e => {
@@ -2051,51 +2000,30 @@ function saveExtDashboards() {
 function renderExtTab() {
   const list=document.getElementById('ext-list'); list.innerHTML='';
   g.extDashboards.forEach((dash,i)=>{
-    const isActive=(g.activeDashboard===i);
     const card=document.createElement('div');
-    card.className='ext-card'+(isActive?' active':'');
+    card.className='ext-card';
     card.innerHTML=`
       <div class="ext-card-left">
         <div class="ext-card-name">${esc(dash.name)}</div>
         <div class="ext-card-url">${esc(dash.url)}</div>
       </div>
-      <div class="ext-arrow">&#8594;</div>
+      <div class="ext-arrow">&#8599;</div>
       ${g.clearance==='admin'?`<div class="ext-rm-btn" style="display:flex" data-idx="${i}">&#215;</div>`:''}
     `;
     card.addEventListener('click',e=>{
       if(e.target.classList.contains('ext-rm-btn')) return;
-      if(!isActive){ g.activeDashboard=i; openExt(dash.url); renderExtTab(); }
+      window.open(dash.url,'_blank','noopener,noreferrer');
     });
     const rm=card.querySelector('.ext-rm-btn');
     if(rm) rm.addEventListener('click',e=>{
       e.stopPropagation();
-      if(g.activeDashboard===i) closeExt();
       g.extDashboards.splice(i,1);
-      if(g.activeDashboard>=i) g.activeDashboard=-1;
       saveExtDashboards(); renderExtTab();
     });
     list.appendChild(card);
   });
   document.getElementById('ext-add-form').style.display=g.clearance==='admin'?'block':'none';
-  document.getElementById('ext-back-btn').style.display=g.activeDashboard>=0?'block':'none';
 }
-
-function openExt(url) {
-  const overlay=document.getElementById('webview-overlay');
-  const iframe=document.getElementById('ext-iframe');
-  const loading=document.getElementById('ext-loading');
-  overlay.style.display='block'; loading.style.display='flex';
-  iframe.style.opacity='0'; iframe.src=url;
-  iframe.onload=()=>{ loading.style.display='none'; iframe.style.opacity='1'; };
-}
-
-function closeExt() {
-  document.getElementById('webview-overlay').style.display='none';
-  document.getElementById('ext-iframe').src='about:blank';
-  g.activeDashboard=-1; renderExtTab();
-}
-
-document.getElementById('ext-back-btn').addEventListener('click',closeExt);
 
 const extNameInput=document.getElementById('ext-name-input');
 const extUrlInput=document.getElementById('ext-url-input');
@@ -2166,7 +2094,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab-'+tab).classList.add('active');
-    if(tab!=='ext'&&g.activeDashboard>=0) closeExt();
+    if(tab!=='ext') g.activeDashboard=-1;
     document.getElementById('btn-countries').classList.toggle('active',tab==='countries');
   });
 });
