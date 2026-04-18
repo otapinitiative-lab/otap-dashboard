@@ -776,7 +776,7 @@ html, body {
 }
 
 .pin-country { font-size: 12px; color: rgba(249,249,249,0.35); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
-.pin-src-count { font-size: 11px; color: rgba(249,249,249,0.25); letter-spacing: 0.06em; margin-bottom: 16px; }
+.pin-src-count { font-size: 11px; color: rgba(249,249,249,0.25); letter-spacing: 0.04em; margin-bottom: 12px; line-height: 1.6; }
 
 .maritime-badge {
   display: inline-block;
@@ -2625,7 +2625,7 @@ html, body {
           <div id="pin-country-wrap"></div>
           <div class="pin-headline" id="pin-headline" style="display:none"></div>
           <div class="pin-src-count" id="pin-src-count"></div>
-          <div class="sources-label">Sources</div>
+          <div class="sources-label" id="sources-label-el">Sources</div>
           <div class="sources-divider"></div>
           <div class="sources-list" id="sources-list"></div>
           <div class="scroll-hint" id="sources-scroll-hint" style="display:none">Scroll for more</div>
@@ -3059,7 +3059,7 @@ const REGIONS = [
   { name:'GLOBAL',       subtitle:'All Theatres',         lat: 20,  lon:   0, zoom:2,   arctic:false },
   { name:'EUROPE',       subtitle:'European Theatre',      lat: 54,  lon:  20, zoom:4,   arctic:false },
   { name:'MIDDLE EAST',  subtitle:'CENTCOM AOR',           lat: 27,  lon:  42, zoom:4.5, arctic:false },
-  { name:'INDO-PACIFIC', subtitle:'INDOPACOM AOR',         lat: 15,  lon: 115, zoom:3.5, arctic:false },
+  { name:'INDO-PACIFIC', subtitle:'INDOPACOM AOR',         lat:  10,  lon: 130, zoom:3,   arctic:false },
   { name:'AFRICA',       subtitle:'AFRICOM AOR',           lat:  5,  lon:  20, zoom:3.5, arctic:false },
   { name:'AMERICAS',     subtitle:'NORTHCOM/SOUTHCOM AOR', lat: 15,  lon: -80, zoom:3,   arctic:false },
   { name:'ARCTIC',       subtitle:'High North Theatre',    lat: 90,  lon:   0, zoom:3,   arctic:true  },
@@ -3069,7 +3069,7 @@ const REGION_BBOXES = [
   { latMin:-90,latMax:90, lonMin:-180,lonMax:180  },
   { latMin:35, latMax:82, lonMin:-25, lonMax:180  },
   { latMin:12, latMax:42, lonMin:25,  lonMax:65   },
-  { latMin:-15,latMax:45, lonMin:60,  lonMax:180  },
+  { latMin:-50, latMax:50,  lonMin:60,  lonMax:180  },  // Indo-Pacific: covers AU, NZ, JP, KR, PH, Pacific
   { latMin:-40,latMax:38, lonMin:-20, lonMax:55   },
   { latMin:-60,latMax:75, lonMin:-170,lonMax:-25  },
   { latMin:60, latMax:90, lonMin:-180,lonMax:180  },
@@ -3392,8 +3392,8 @@ function initMap() {
     maxBounds:[[-85,-Infinity],[85,Infinity]],
   });
 
-  // CartoDB Dark Matter — clean dark basemap
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  // CartoDB Dark Matter — stronger land/water contrast than dark_all
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_matter/{z}/{x}/{y}{r}.png',{
     subdomains:'abcd', maxZoom:19,
   }).addTo(g.leafletMap);
 
@@ -3423,75 +3423,95 @@ async function loadBorders() {
   } catch(e) { console.warn('[BORDERS]', e.message); }
 }
 
+// Pin type determination — separates threat severity from source type
+function getPinType(pin) {
+  if (pin.country === 'MARITIME') return 'maritime';
+  if (pin.hasPrimary) return 'primary';          // diamond, accent colour
+  if (pin.maxSeverity >= 4) return 'threat-high'; // red circle — emerging/active threat
+  if (pin.maxSeverity >= 2) return 'threat-mid';  // amber circle — watch
+  return 'news';                                   // dim circle — news/monitoring only
+}
+
 function getPinColour(pin) {
-  if (pin.country === 'MARITIME') return null; // handled separately
-
   if (g.pinColourMode === 'source-type') {
-    // Source-type mode: accent = primary, amber = news, grey = unverified
-    if (pin.hasPrimary) {
-      return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-    }
+    if (pin.hasPrimary) return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
     const hasVerified = pin.sources.some(s => NEWS_FACTUALITY.has(s.factuality));
-    return hasVerified ? '#c5a267' : 'rgba(249,249,249,0.3)';
+    return hasVerified ? '#c5a267' : 'rgba(249,249,249,0.25)';
   }
-
-  // Severity mode (default): red = high, amber = standard, accent = primary
-  if (pin.hasPrimary) {
-    return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-  }
-  return pin.maxSeverity >= 4 ? '#e05c5c' : '#c5a267';
+  // Severity mode
+  const type = getPinType(pin);
+  if (type === 'primary')     return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  if (type === 'threat-high') return '#e05c5c';
+  if (type === 'threat-mid')  return '#c5a267';
+  return 'rgba(180,180,180,0.5)';
 }
 
 function renderPins() {
   g.markers.forEach(m=>m.remove()); g.markers=[];
   for (const pin of g.pins) {
-    const isMaritime = pin.country === 'MARITIME';
+    const type = getPinType(pin);
+    const color = getPinColour(pin);
     let icon;
 
-    if (isMaritime) {
+    if (type === 'maritime') {
       icon = L.divIcon({ className:'custom-pin',
-        html:`<div style="width:18px;height:18px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.3);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:11px;">⚓</div>`,
+        html:`<div style="width:18px;height:18px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.35);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:11px;">⚓</div>`,
         iconSize:[18,18], iconAnchor:[9,9] });
+
+    } else if (type === 'primary') {
+      // Diamond — primary intel source
+      icon = L.divIcon({ className:'custom-pin',
+        html:`<div style="width:11px;height:11px;background:${color};transform:rotate(45deg);border-radius:1px;box-shadow:0 0 8px ${color}99;"></div>`,
+        iconSize:[14,14], iconAnchor:[7,7] });
+
+    } else if (type === 'threat-high') {
+      // Pulsing red circle — active/emerging threat
+      icon = L.divIcon({ className:'custom-pin',
+        html:`<div style="position:relative;width:12px;height:12px;">
+          <div style="position:absolute;inset:0;background:#e05c5c;border-radius:50%;animation:pulse-accent 1.8s infinite;opacity:0.4;transform:scale(1.8);"></div>
+          <div style="position:absolute;inset:0;background:#e05c5c;border-radius:50%;border:1.5px solid rgba(0,0,0,0.4);box-shadow:0 0 6px #e05c5caa;"></div>
+        </div>`,
+        iconSize:[12,12], iconAnchor:[6,6] });
+
+    } else if (type === 'threat-mid') {
+      // Amber circle — watch
+      icon = L.divIcon({ className:'custom-pin',
+        html:`<div style="width:10px;height:10px;background:#c5a267;border-radius:50%;border:1.5px solid rgba(0,0,0,0.4);box-shadow:0 0 5px #c5a26777;"></div>`,
+        iconSize:[10,10], iconAnchor:[5,5] });
+
     } else {
-      const color = getPinColour(pin);
-      // Primary sources get a diamond shape; news/standard get a circle
-      if (pin.hasPrimary) {
-        icon = L.divIcon({ className:'custom-pin',
-          html:`<div style="width:10px;height:10px;background:${color};transform:rotate(45deg);border-radius:1px;box-shadow:0 0 6px ${color}88;"></div>`,
-          iconSize:[14,14], iconAnchor:[7,7] });
-      } else {
-        icon = L.divIcon({ className:'custom-pin',
-          html:`<div style="width:10px;height:10px;background:${color};border-radius:50%;border:1.5px solid rgba(0,0,0,0.4);box-shadow:0 0 6px ${color}66;"></div>`,
-          iconSize:[10,10], iconAnchor:[5,5] });
-      }
+      // Small grey circle — news/monitoring
+      icon = L.divIcon({ className:'custom-pin',
+        html:`<div style="width:7px;height:7px;background:rgba(180,180,180,0.4);border-radius:50%;border:0.5px solid rgba(255,255,255,0.2);"></div>`,
+        iconSize:[7,7], iconAnchor:[3,3] });
     }
 
     const m = L.marker([pin.lat,pin.lon],{icon}).addTo(g.leafletMap);
     m.on('click', ()=>selectPin(pin));
     g.markers.push(m);
   }
-
-  // Update legend to reflect current mode
   updateLegend();
 }
 
 function updateLegend() {
   const legend = document.getElementById('pin-legend');
+  if (!legend) return;
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
   if (g.pinColourMode === 'source-type') {
-    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
     legend.innerHTML = `
       <div class="legend-item"><div class="legend-diamond" style="background:${accent};box-shadow:0 0 4px ${accent}88"></div>Primary source</div>
       <div class="legend-item"><div class="legend-dot" style="background:#c5a267"></div>Verified news</div>
-      <div class="legend-item"><div class="legend-dot" style="background:rgba(249,249,249,0.3)"></div>Unverified</div>
-      <div class="legend-item"><div class="legend-square">⚓</div>Maritime</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(180,180,180,0.4);border:0.5px solid rgba(255,255,255,0.2)"></div>Unverified</div>
+      <div class="legend-item"><div class="legend-square">⚓</div>Maritime activity</div>
     `;
   } else {
-    const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
     legend.innerHTML = `
-      <div class="legend-item"><div class="legend-dot" style="background:#e05c5c;box-shadow:0 0 4px #e05c5c66"></div>High severity (4+)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#c5a267"></div>Standard</div>
-      <div class="legend-item"><div class="legend-diamond" style="background:${accent};box-shadow:0 0 4px ${accent}88"></div>Primary source</div>
-      <div class="legend-item"><div class="legend-square">⚓</div>Maritime</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e05c5c;box-shadow:0 0 5px #e05c5caa"></div>Active threat (sev. 4+)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#c5a267"></div>Watch / monitoring</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(180,180,180,0.4);border:0.5px solid rgba(255,255,255,0.2)"></div>News / low priority</div>
+      <div class="legend-item"><div class="legend-diamond" style="background:${accent};box-shadow:0 0 4px ${accent}88"></div>Primary intel source</div>
+      <div class="legend-item"><div class="legend-square">⚓</div>Maritime activity</div>
+      <div class="legend-item" style="opacity:0.35"><span style="font-size:10px;color:#f9f9f9">★</span>&nbsp;Capital (planned)</div>
     `;
   }
 }
@@ -3513,10 +3533,27 @@ function renderIntelTab() {
   const pin = g.selectedPin;
 
   document.getElementById('pin-city').textContent = pin.city;
+
+  // Country / maritime badge
   const cw = document.getElementById('pin-country-wrap');
-  cw.innerHTML = pin.country==='MARITIME'
-    ? '<div class="maritime-badge">Maritime</div>'
-    : `<div class="pin-country">${esc(pin.country)}</div>`;
+  const type = getPinType(pin);
+
+  // Build severity + type badge alongside country
+  const sevColour = type === 'threat-high' ? '#e05c5c'
+    : type === 'threat-mid' ? '#c5a267'
+    : 'rgba(180,180,180,0.4)';
+  const sevLabel = type === 'threat-high' ? 'ACTIVE THREAT'
+    : type === 'threat-mid'  ? 'WATCH'
+    : type === 'primary'     ? 'PRIMARY SOURCE'
+    : type === 'maritime'    ? 'MARITIME'
+    : 'MONITORING';
+  const sevBadge = `<span style="font-size:8px;letter-spacing:0.14em;text-transform:uppercase;padding:2px 6px;border-radius:2px;border:0.5px solid ${sevColour};color:${sevColour};margin-left:8px;vertical-align:middle;">${sevLabel}</span>`;
+
+  if (pin.country === 'MARITIME') {
+    cw.innerHTML = `<div class="maritime-badge">Maritime</div>`;
+  } else {
+    cw.innerHTML = `<div class="pin-country">${esc(pin.country)}${sevBadge}</div>`;
+  }
 
   // Headline
   const hlEl = document.getElementById('pin-headline');
@@ -3525,11 +3562,29 @@ function renderIntelTab() {
     hlEl.style.display = 'block';
   } else { hlEl.style.display = 'none'; }
 
-  document.getElementById('pin-src-count').textContent =
-    `${pin.sources.length} Source${pin.sources.length!==1?'s':''}`;
+  // Source count with context explanation
+  const srcCount = pin.sources.length;
+  const srcCtx = srcCount === 0 ? 'No sources on record'
+    : srcCount === 1 ? `1 reporting source — this location appears because of active coverage by the outlet below`
+    : `${srcCount} reporting sources — this location is being monitored because ${srcCount} separate outlets have filed reports here`;
+  document.getElementById('pin-src-count').textContent = srcCtx;
+
+  // Sources label with severity context
+  const sourcesLabelEl = document.getElementById('sources-label-el');
+  if (sourcesLabelEl) {
+    const ctx = type === 'threat-high' ? 'ACTIVE REPORTING — severity ≥ 4'
+      : type === 'primary' ? 'PRIMARY INTELLIGENCE'
+      : 'OPEN SOURCE REPORTING';
+    sourcesLabelEl.textContent = ctx;
+  }
 
   const list = document.getElementById('sources-list');
   list.innerHTML='';
+
+  if (srcCount === 0) {
+    list.innerHTML = '<div style="font-size:11px;color:rgba(249,249,249,0.2);padding:8px 0;letter-spacing:0.06em;">No sources on record for this location.</div>';
+  }
+
   pin.sources.forEach((s,i)=>{
     const isExp = (i===g.expandedSource);
     const ver = ['High','Very High','OTAP Accepted'].includes(s.factuality);
@@ -3539,11 +3594,19 @@ function renderIntelTab() {
     const isPrimary = s.isPrimary ||
       (s.factuality||'').toUpperCase().includes('PRIMARY') ||
       PRIMARY_OUTLETS.has((s.outletName||'').toUpperCase());
+
+    // Factuality explanation
+    const factExplain = ver
+      ? (s.factuality === 'Very High' ? 'Highest credibility — peer-reviewed or institutional'
+        : s.factuality === 'High'     ? 'High credibility — established news organisation'
+        : 'OTAP-vetted source')
+      : 'Source credibility not verified';
+
     const card = document.createElement('div');
     card.className = 'source-card'+(isExp?' expanded':'');
     card.innerHTML=`
       <div class="source-name">${esc(s.outletName)}${isPrimary?'<span class="source-primary-badge">Primary</span>':''}</div>
-      <div class="source-fact ${ver?'verified':'unverified'}">${ver?s.factuality:'Unverified'}</div>
+      <div class="source-fact ${ver?'verified':'unverified'}" title="${factExplain}">${ver?s.factuality:'Unverified'}</div>
       ${expLbl?`<div class="expiry-badge" style="background:rgba(${expSoon?'224,92,92':'197,162,103'},0.1);border:0.5px solid ${expColor};color:${expColor}">${expLbl}</div>`:''}
       <div class="source-url">${esc(s.url)}</div>
       <div class="source-open-btn">Open &#8594;</div>
