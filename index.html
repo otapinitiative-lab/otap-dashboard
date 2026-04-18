@@ -2459,6 +2459,43 @@ html, body {
 .wd-stat-val.up { color: #7a9f6a; }
 .wd-stat-val.down { color: #e05c5c; }
 
+/* ── OSINT BRIGHTNESS OVERRIDES ── */
+#screen-osint .osint-sb-title,
+#screen-osint .osint-card-title,
+#screen-osint .osint-topbar-subject,
+#screen-osint .osint-data-val { color: #ffffff; }
+
+#screen-osint .osint-sb-sub,
+#screen-osint .osint-card-trigger { color: rgba(255,255,255,0.5); }
+
+#screen-osint .osint-field-label { color: rgba(255,255,255,0.55); }
+#screen-osint .osint-input { color: #ffffff; border-color: rgba(255,255,255,0.18); }
+#screen-osint .osint-input::placeholder { color: rgba(255,255,255,0.22); }
+#screen-osint .osint-data-key { color: rgba(255,255,255,0.42); }
+#screen-osint .osint-data-val.dim { color: rgba(255,255,255,0.6); }
+#screen-osint .osint-topbar-meta { color: rgba(255,255,255,0.4); }
+#screen-osint .osint-idle-text { color: rgba(255,255,255,0.4); }
+#screen-osint .osint-breach-meta { color: rgba(255,255,255,0.5); }
+#screen-osint .osint-web-result-snippet { color: rgba(255,255,255,0.55); }
+#screen-osint .osint-web-result-url { color: rgba(255,255,255,0.32); }
+
+/* No-key = bright red */
+#screen-osint .osint-card.no-key { opacity:1; border-left-color:rgba(224,92,92,0.6); }
+#screen-osint .osint-no-key-msg { color:#e05c5c; font-size:12px; letter-spacing:0.04em; line-height:1.7; }
+#screen-osint .osint-no-key-msg a { color:#c5a267; border-bottom-color:rgba(197,162,103,0.4); }
+#screen-osint .osint-card-status.no-key { color:#e05c5c; border-color:rgba(224,92,92,0.5); }
+
+/* Keys panel brightness */
+#osint-keys-panel .osint-key-group-name { color:#ffffff; }
+#osint-keys-panel .osint-key-link { color:rgba(255,255,255,0.38); }
+#osint-keys-panel .osint-security-item { color:rgba(255,255,255,0.62); }
+
+/* ── DARK WEB (OSINT) — active section placeholder ── */
+.osint-darkweb-coming {
+  font-size:11px; color:rgba(249,249,249,0.3);
+  letter-spacing:0.06em; line-height:1.8; padding:4px 0;
+}
+
 </style>
 </head>
 <body>
@@ -2593,9 +2630,9 @@ html, body {
       <div class="sb-title-row">
         <div class="sb-title">OTAP Dashboard</div>
         <div class="sb-wc">
-          <div class="wc-btn" id="btn-minimize" title="Minimise">—</div>
+          <div class="wc-btn" id="btn-theme-map" title="Cycle theme" style="font-size:10px;letter-spacing:0.06em;">◐</div>
+          <div class="wc-btn" id="btn-mode-switch" title="Mode select" style="font-size:10px;letter-spacing:0.06em;">⊞</div>
           <div class="wc-btn" id="btn-fullscreen" title="Fullscreen">&#9633;</div>
-          <div class="wc-btn close" id="btn-close" title="Close">&#215;</div>
         </div>
       </div>
       <div class="sb-opr" id="sb-opr">OPR: Operator</div>
@@ -2840,14 +2877,21 @@ html, body {
         </div>
       </div>
 
-      <!-- Dark web (placeholder) -->
-      <div class="osint-key-group" style="opacity:0.5">
+      <!-- Dark web -->
+      <div class="osint-key-group">
         <div class="osint-key-group-header">
           <div class="osint-key-group-name">🌐 Dark Web APIs</div>
-          <div class="osint-key-group-status missing">Coming in Phase 4</div>
+          <div class="osint-key-group-status missing" id="key-status-darkweb">Pending security review</div>
         </div>
         <div class="osint-key-group-body">
-          <div class="osint-key-link" style="color:rgba(249,249,249,0.3)">IntelX, Ahmia, and OnionScan integration planned. Requires separate security review.</div>
+          <div class="osint-darkweb-coming">
+            The following dark web intelligence APIs are planned for Phase 5 integration:<br><br>
+            <strong style="color:rgba(249,249,249,0.6)">IntelligenceX (IntelX)</strong> — leaked data, dark web search, breach archives<br>
+            <strong style="color:rgba(249,249,249,0.6)">Ahmia</strong> — Tor hidden service search engine (open source)<br>
+            <strong style="color:rgba(249,249,249,0.6)">OnionScan</strong> — Tor service fingerprinting and exposure analysis<br>
+            <strong style="color:rgba(249,249,249,0.6)">DarkOwl DARKINT</strong> — commercial dark web monitoring<br><br>
+            <span style="color:rgba(249,249,249,0.2)">All dark web calls will be routed exclusively through the Apps Script server-side proxy. Direct browser access to dark web APIs is architecturally prohibited. Pending OTAP security review before activation.</span>
+          </div>
         </div>
       </div>
 
@@ -2921,9 +2965,9 @@ html, body {
         <div class="osint-topbar-meta" id="osint-meta-label">OTAP OSINT ENGINE v1.0</div>
       </div>
       <div class="osint-topbar-wc">
-        <div class="wc-btn" id="osint-btn-minimize" title="Minimise">—</div>
+        <div class="wc-btn" id="osint-btn-theme" title="Cycle theme" style="font-size:10px;">◐</div>
+        <div class="wc-btn" id="osint-btn-mode" title="Mode select" style="font-size:10px;">⊞</div>
         <div class="wc-btn" id="osint-btn-fullscreen" title="Fullscreen">&#9633;</div>
-        <div class="wc-btn close" id="osint-btn-close" title="Close">&#215;</div>
       </div>
     </div>
 
@@ -2954,19 +2998,97 @@ html, body {
     <button class="wd-tab" data-wdtab="data">Data</button>
     <button class="wd-tab" data-wdtab="charts">Charts</button>
     <div class="wd-topbar-right">
+      <button class="wd-btn" id="wd-tutorial-btn">? Tutorial</button>
+      <button class="wd-btn" id="wd-projects-btn">⊙ Projects</button>
       <button class="wd-btn accent" id="wd-save-btn">Save</button>
       <button class="wd-btn" id="wd-clear-btn">Clear</button>
       <button class="wd-btn" id="wd-back-btn">&#8592; Mode Select</button>
       <div class="sb-wc" style="margin-left:8px">
-        <div class="wc-btn" id="wd-btn-minimize">—</div>
+        <div class="wc-btn" id="wd-btn-theme" title="Cycle theme" style="font-size:10px;">◐</div>
+        <div class="wc-btn" id="wd-btn-mode" title="Mode select" style="font-size:10px;">⊞</div>
         <div class="wc-btn" id="wd-btn-fullscreen">&#9633;</div>
-        <div class="wc-btn close" id="wd-btn-close">&#215;</div>
       </div>
     </div>
   </div>
 
   <!-- Mind Map Panel -->
   <div class="wd-panel active" id="wd-mindmap">
+
+    <!-- TUTORIAL OVERLAY -->
+    <div id="wd-tutorial-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.82);z-index:50;overflow-y:auto;padding:32px;">
+      <div style="max-width:680px;margin:0 auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+          <div style="font-family:Georgia,serif;font-size:22px;font-weight:400;color:#f9f9f9;">Work Desk — Tutorial</div>
+          <button id="wd-tutorial-close" style="padding:5px 14px;border:0.5px solid rgba(255,255,255,0.15);border-radius:2px;background:transparent;font-family:var(--font);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(249,249,249,0.4);cursor:pointer;">Close</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+          <div style="background:var(--otap-navy-mid);border:0.5px solid var(--otap-border);border-left:2px solid var(--accent);border-radius:2px;padding:16px;">
+            <div style="font-size:10px;color:var(--accent);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:10px;">Mind Map Tab</div>
+            <div style="font-size:11px;color:rgba(249,249,249,0.6);line-height:1.85;">
+              <strong style="color:#f9f9f9">▶ Select</strong> — click a node to select it; drag to reposition<br>
+              <strong style="color:#f9f9f9">○ Node</strong> — click anywhere on the canvas to place a new node; double-click any node to rename it<br>
+              <strong style="color:#f9f9f9">— Edge</strong> — click a source node, then click a target node to draw a directed edge between them<br>
+              <strong style="color:#f9f9f9">✕ Delete</strong> — click a node to remove it and all its edges; click near an edge midpoint to delete just that edge<br>
+              <strong style="color:#f9f9f9">⬡ Pan</strong> — click and drag the canvas to pan the view<br><br>
+              Double-click empty canvas in Select mode also adds a node. All changes save automatically.
+            </div>
+          </div>
+
+          <div style="background:var(--otap-navy-mid);border:0.5px solid var(--otap-border);border-left:2px solid #7a9f6a;border-radius:2px;padding:16px;">
+            <div style="font-size:10px;color:#7a9f6a;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:10px;">Data Tab</div>
+            <div style="font-size:11px;color:rgba(249,249,249,0.6);line-height:1.85;">
+              <strong style="color:#f9f9f9">Import CSV</strong> — click the Import button and select a .csv or .txt file<br>
+              <strong style="color:#f9f9f9">Paste</strong> — copy cells directly from Excel or Google Sheets and press Ctrl+V anywhere on the Data tab<br>
+              <strong style="color:#f9f9f9">Drag &amp; Drop</strong> — drag a CSV file onto the paste zone<br>
+              <strong style="color:#f9f9f9">First row</strong> is always treated as column headers<br>
+              <strong style="color:#f9f9f9">Clear data</strong> — removes the current dataset; this cannot be undone<br><br>
+              Data is stored per-user in your browser and does not sync to other operators.
+            </div>
+          </div>
+
+          <div style="background:var(--otap-navy-mid);border:0.5px solid var(--otap-border);border-left:2px solid #c5a267;border-radius:2px;padding:16px;">
+            <div style="font-size:10px;color:#c5a267;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:10px;">Charts Tab</div>
+            <div style="font-size:11px;color:rgba(249,249,249,0.6);line-height:1.85;">
+              <strong style="color:#f9f9f9">X axis</strong> — select any column as the horizontal axis (usually labels, dates, or categories)<br>
+              <strong style="color:#f9f9f9">Y axis</strong> — select a numeric column; non-numeric values are skipped automatically<br>
+              <strong style="color:#f9f9f9">Chart types</strong> — Bar, Line, Area, Scatter. Line and Area show trends over a sequence; Bar compares categories; Scatter shows correlations<br>
+              <strong style="color:#f9f9f9">Render</strong> — generates the chart; click again after changing columns to refresh<br>
+              <strong style="color:#f9f9f9">Export PNG</strong> — saves the chart as an image file<br><br>
+              Statistics (Min, Max, Mean, Median, Trend) are shown automatically below the chart.
+            </div>
+          </div>
+
+          <div style="background:var(--otap-navy-mid);border:0.5px solid var(--otap-border);border-left:2px solid rgba(249,249,249,0.2);border-radius:2px;padding:16px;">
+            <div style="font-size:10px;color:rgba(249,249,249,0.4);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:10px;">Projects &amp; Saving</div>
+            <div style="font-size:11px;color:rgba(249,249,249,0.6);line-height:1.85;">
+              <strong style="color:#f9f9f9">Save</strong> — saves your current mind map and data to the active project<br>
+              <strong style="color:#f9f9f9">Projects (⊙)</strong> — open the project manager to create, switch between, or delete projects. Up to 5 projects per operator<br>
+              <strong style="color:#f9f9f9">Per-user storage</strong> — projects are stored in your browser under your access key. Other operators on the same device will not see your projects<br>
+              <strong style="color:#f9f9f9">Clear</strong> — clears only the currently active tab (mind map, data, or chart). Does not affect other tabs<br><br>
+              Work data is local to your browser. It does not sync to the server or other operators.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECTS PANEL -->
+    <div id="wd-projects-panel" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.82);z-index:50;align-items:center;justify-content:center;">
+      <div style="background:var(--otap-navy-mid);border:0.5px solid var(--otap-border);border-radius:3px;padding:28px 32px;min-width:400px;max-width:500px;width:90%;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div style="font-family:Georgia,serif;font-size:18px;font-weight:400;color:#f9f9f9;">Work Desk Projects</div>
+          <button id="wd-projects-close" style="padding:4px 12px;border:0.5px solid rgba(255,255,255,0.12);border-radius:2px;background:transparent;font-family:var(--font);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(249,249,249,0.35);cursor:pointer;">Close</button>
+        </div>
+        <div style="font-size:10px;color:rgba(249,249,249,0.25);letter-spacing:0.08em;margin-bottom:16px;">Up to 5 projects. All data is stored locally under your access key.</div>
+        <div id="wd-project-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;"></div>
+        <div style="display:flex;gap:8px;">
+          <input id="wd-new-project-name" type="text" placeholder="New project name..." style="flex:1;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.12);border-radius:2px;padding:7px 10px;font-family:var(--font);font-size:12px;color:#f9f9f9;outline:none;">
+          <button id="wd-new-project-btn" style="padding:7px 14px;border:0.5px solid var(--accent);border-radius:2px;background:transparent;font-family:var(--font);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);cursor:pointer;white-space:nowrap;">+ New</button>
+        </div>
+      </div>
+    </div>
     <canvas id="mindmap-canvas"></canvas>
     <div class="mm-toolbar">
       <div class="mm-tool active" id="mm-tool-select" title="Select / Move">&#9654;</div>
@@ -3252,8 +3374,11 @@ function enterDashboard() {
   loadExtDashboards();
   if (!g.leafletMap) initMap();
   startSync();
-  // Start market ticker (Map Mode only)
   initTicker();
+  // Show Gemma popup on first visit if not configured
+  const ep = getGemmaEndpoint();
+  if (!ep) setTimeout(showGemmaPopup, 1200);
+  g.gemmaEndpoint = ep !== 'SKIPPED' ? ep : '';
 }
 
 function updateModeLabel() {
@@ -3309,8 +3434,21 @@ const COUNTRY_CITY_OVERRIDES = {
 };
 
 function parseReports(data) {
-  if (data.user) { g.userName = data.user; document.getElementById('sb-opr').textContent = `OPR: ${data.user}`; }
-  g.clearance = data.clearance || 'standard';
+  // User name — always update from server response
+  const serverName = data.user || data.userName || '';
+  if (serverName) {
+    g.userName = serverName;
+    const oprEl = document.getElementById('sb-opr');
+    if (oprEl) oprEl.textContent = `OPR: ${serverName}`;
+  }
+
+  // Clearance — critical: must come from server, never default to demoting
+  if (data.clearance) {
+    g.clearance = data.clearance;
+  }
+  // Apply clearance-sensitive UI immediately after parse
+  applyAdminUI();
+
   if (!Array.isArray(data.reports)) return;
   g.reports = data.reports.map(item => {
     let lat = parseFloat(item.lat)||0, lon = parseFloat(item.lon)||0;
@@ -3639,6 +3777,12 @@ function renderIntelTab() {
 // ── COUNTRIES TAB ─────────────────────────────────────────────────
 function renderCountriesTab() {
   const el = document.getElementById('ctry-list'); el.innerHTML='';
+
+  if (!g.allCountries.length) {
+    el.innerHTML = '<div style="font-size:11px;color:rgba(249,249,249,0.2);padding:12px 0;letter-spacing:0.08em;">No countries loaded — click Sync or wait for data.</div>';
+    return;
+  }
+
   g.allCountries.forEach(country=>{
     const isSel = g.selectedCountries.has(country);
     const row = document.createElement('div');
@@ -3842,18 +3986,8 @@ document.getElementById('asp-submit-btn').addEventListener('click',async()=>{
   } catch(e){ statusEl.textContent='Upload failed: '+e.message; }
 });
 
-// Window controls
-document.getElementById('btn-minimize').addEventListener('click',()=>{
-  document.getElementById('sidebar').style.transform='translateX(110%)';
-  setTimeout(()=>document.getElementById('sidebar').style.transform='',1500);
-});
-document.getElementById('btn-fullscreen').addEventListener('click',()=>{
-  if(!document.fullscreenElement) document.documentElement.requestFullscreen?.();
-  else document.exitFullscreen?.();
-});
-document.getElementById('btn-close').addEventListener('click',()=>{
-  if(confirm('Close OTAP Dashboard?')) window.close();
-});
+// Window controls (fullscreen only — minimize/close removed)
+// Handled by wireHeaderButtons() above
 
 // Dismiss mode menu on outside click
 document.addEventListener('click',e=>{
@@ -3963,9 +4097,7 @@ function updateOsintKeyStatuses() {
   if (keysBtn && keysPanel)   keysBtn.addEventListener('click',  () => { keysPanel.style.display='flex'; updateOsintKeyStatuses(); });
   if (keysClose && keysPanel) keysClose.addEventListener('click', () => { keysPanel.style.display='none'; updateOsintKeyStatuses(); });
   if (backBtn)  backBtn.addEventListener('click',  () => showScreen('mode'));
-  if (minBtn)   minBtn.addEventListener('click',   () => { document.querySelector('.osint-sidebar').style.transform='translateX(-110%)'; setTimeout(()=>document.querySelector('.osint-sidebar').style.transform='',1500); });
-  if (fsBtn)    fsBtn.addEventListener('click',    () => { if(!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); });
-  if (closeBtn) closeBtn.addEventListener('click', () => { if(confirm('Close OTAP Dashboard?')) window.close(); });
+  // osint-btn-minimize, osint-btn-close removed — fullscreen handled by wireHeaderButtons()
 
   // Input → enable run button
   ['osint-email','osint-ip','osint-phone','osint-name','osint-domain'].forEach(id => {
@@ -4469,30 +4601,38 @@ let g_tickerData = {};
 let g_tickerLoaded = false;
 
 async function fetchTickerData() {
-  // Use Yahoo Finance v8 via allorigins proxy to avoid CORS
   const syms = TICKER_SYMBOLS.map(s => s.sym).join(',');
-  const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(syms)}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,shortName`;
-  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+  // Try corsproxy.io as primary, allorigins as fallback
+  const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(syms)}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,shortName`;
+  const proxies = [
+    `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`,
+  ];
 
-  try {
-    const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    const quotes = data?.quoteResponse?.result || [];
-    for (const q of quotes) {
-      g_tickerData[q.symbol] = {
-        price: q.regularMarketPrice,
-        change: q.regularMarketChange,
-        pct: q.regularMarketChangePercent,
-        name: q.shortName || q.symbol,
-      };
+  for (const proxyUrl of proxies) {
+    try {
+      const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const quotes = data?.quoteResponse?.result || [];
+      if (!quotes.length) continue;
+      for (const q of quotes) {
+        g_tickerData[q.symbol] = {
+          price: q.regularMarketPrice,
+          change: q.regularMarketChange,
+          pct: q.regularMarketChangePercent,
+          name: q.shortName || q.symbol,
+        };
+      }
+      g_tickerLoaded = true;
+      renderTicker();
+      return;
+    } catch(e) {
+      console.warn('[TICKER] Proxy failed:', proxyUrl.slice(0,40), e.message);
     }
-    g_tickerLoaded = true;
-    renderTicker();
-  } catch(e) {
-    console.warn('[TICKER]', e.message);
-    renderTickerFallback();
   }
+  // Both proxies failed — show static fallback
+  renderTickerFallback();
 }
 
 function renderTicker() {
@@ -4611,25 +4751,27 @@ document.querySelectorAll('[data-wdtab]').forEach(btn => {
   const backBtn = safe('wd-back-btn');
   const saveBtn = safe('wd-save-btn');
   const clearBtn = safe('wd-clear-btn');
-  const minBtn  = safe('wd-btn-minimize');
-  const fsBtn   = safe('wd-btn-fullscreen');
-  const clsBtn  = safe('wd-btn-close');
 
   if (backBtn)  backBtn.addEventListener('click',  () => showScreen('mode'));
-  if (saveBtn)  saveBtn.addEventListener('click',  () => { saveMindmap(); saveSheetData(); showToast('Work Desk saved'); });
+  if (saveBtn)  saveBtn.addEventListener('click',  () => { wdSaveToProject(); showToast('Project saved'); });
   if (clearBtn) clearBtn.addEventListener('click', () => {
     const tab = document.querySelector('[data-wdtab].active')?.dataset.wdtab;
     if (tab === 'mindmap') { if(confirm('Clear mind map?')) { g_mm.nodes=[]; g_mm.edges=[]; drawMindmap(); saveMindmap(); showToast('Mind map cleared'); } }
     if (tab === 'data')    { if(confirm('Clear data?')) { g_sheetData=[]; g_sheetHeaders=[]; renderSheet(); showToast('Data cleared'); } }
     if (tab === 'charts')  { clearChart(); }
   });
-  if (minBtn)   minBtn.addEventListener('click',   () => document.querySelector('.wd-topbar').style.display='none');
-  if (fsBtn)    fsBtn.addEventListener('click',    () => { if(!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); });
-  if (clsBtn)   clsBtn.addEventListener('click',   () => { if(confirm('Close OTAP Dashboard?')) window.close(); });
+  // wd-btn-minimize, wd-btn-close removed — fullscreen/mode/theme handled by wireHeaderButtons()
 })();
 
 function initWorkDesk() {
   resizeMindmapCanvas();
+  // Ensure at least one default project exists for this user
+  const projects = wdGetProjects();
+  if (!projects.length) {
+    const defaultName = 'Project 1';
+    wdSaveProjects([{ name: defaultName, created: Date.now(), updated: Date.now() }]);
+    wdSetActiveProject(defaultName);
+  }
   loadMindmap();
   loadSheetData();
 }
@@ -5326,6 +5468,361 @@ function formatChartNum(n) {
   return Number.isInteger(n) ? String(n) : n.toFixed(2);
 }
 
+// ── ADMIN UI APPLICATION ─────────────────────────────────────────
+function applyAdminUI() {
+  // Show/hide add source button based on clearance
+  const addBtn = document.getElementById('btn-add-src');
+  if (addBtn) addBtn.style.opacity = g.clearance === 'admin' ? '1' : '0.4';
+
+  // Re-render ext tab to show/hide remove buttons
+  if (g.activeTab === 'ext') renderExtTab();
+}
+
+// ── HEADER BUTTON WIRING (all 3 modes) ───────────────────────────
+(function wireHeaderButtons() {
+  const safe = id => document.getElementById(id);
+  const fs = () => { if(!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); };
+
+  // Map mode
+  safe('btn-fullscreen')?.addEventListener('click', fs);
+  safe('btn-theme-map')?.addEventListener('click', () => { cycleTheme(); showToast('Theme: ' + SITE_THEME_MAP[g.currentThemeCls]?.dashName); });
+  safe('btn-mode-switch')?.addEventListener('click', () => showScreen('mode'));
+
+  // OSINT mode
+  safe('osint-btn-fullscreen')?.addEventListener('click', fs);
+  safe('osint-btn-theme')?.addEventListener('click', () => { cycleTheme(); showToast('Theme: ' + SITE_THEME_MAP[g.currentThemeCls]?.dashName); });
+  safe('osint-btn-mode')?.addEventListener('click', () => showScreen('mode'));
+
+  // Work Desk
+  safe('wd-btn-fullscreen')?.addEventListener('click', fs);
+  safe('wd-btn-theme')?.addEventListener('click', () => { cycleTheme(); showToast('Theme: ' + SITE_THEME_MAP[g.currentThemeCls]?.dashName); });
+  safe('wd-btn-mode')?.addEventListener('click', () => showScreen('mode'));
+})();
+
+// ── GEMMA 4 CONNECTION POPUP ──────────────────────────────────────
+const GEMMA_KEY = 'otap_gemma_endpoint';
+
+function getGemmaEndpoint() {
+  try { return localStorage.getItem(GEMMA_KEY) || ''; } catch(e) { return ''; }
+}
+
+function setGemmaEndpoint(url) {
+  try { if(url) localStorage.setItem(GEMMA_KEY, url); else localStorage.removeItem(GEMMA_KEY); } catch(e) {}
+}
+
+function showGemmaPopup() {
+  // Only show if not yet configured
+  if (getGemmaEndpoint()) return;
+  const popup = document.getElementById('gemma-popup');
+  if (popup) popup.style.display = 'flex';
+}
+
+// Inject Gemma popup HTML dynamically (shown after mode select)
+(function createGemmaPopup() {
+  const el = document.createElement('div');
+  el.id = 'gemma-popup';
+  el.style.cssText = `
+    position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;
+    display:none;align-items:center;justify-content:center;
+  `;
+  el.innerHTML = `
+    <div style="background:var(--otap-navy-mid);border:0.5px solid var(--otap-border);border-left:2px solid var(--accent);border-radius:3px;padding:28px 32px;max-width:480px;width:90%;position:relative;">
+      <div style="font-size:10px;color:var(--accent);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:10px;">AI Agent — Optional</div>
+      <div style="font-family:Georgia,serif;font-size:20px;font-weight:400;color:#f9f9f9;margin-bottom:10px;">Connect Gemma 4</div>
+      <div style="font-size:12px;color:rgba(249,249,249,0.5);line-height:1.8;margin-bottom:20px;">
+        OTAP supports local AI assistance via <strong style="color:rgba(249,249,249,0.8)">Gemma 4 running through Ollama</strong> on your device.<br><br>
+        Install Ollama, then run: <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:2px;font-size:11px;">ollama run gemma2</code><br><br>
+        The default endpoint is <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:2px;font-size:11px;">http://localhost:11434</code>. Leave blank to skip.
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:9px;color:rgba(249,249,249,0.25);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:5px;">Ollama Endpoint</div>
+        <input id="gemma-endpoint-input" type="text" value="http://localhost:11434"
+          style="width:100%;background:rgba(255,255,255,0.04);border:0.5px solid var(--otap-border);border-radius:2px;padding:8px 10px;font-family:var(--font);font-size:12px;color:#f9f9f9;outline:none;">
+      </div>
+      <div id="gemma-test-status" style="font-size:11px;color:rgba(249,249,249,0.3);margin-bottom:14px;min-height:16px;letter-spacing:0.04em;"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button id="gemma-test-btn" style="padding:7px 16px;border:0.5px solid var(--accent);border-radius:2px;background:transparent;font-family:var(--font);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);cursor:pointer;">Test Connection</button>
+        <button id="gemma-save-btn" style="padding:7px 16px;border:0.5px solid var(--accent);border-radius:2px;background:var(--accent);font-family:var(--font);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--otap-navy);cursor:pointer;">Save &amp; Connect</button>
+        <button id="gemma-skip-btn" style="padding:7px 16px;border:0.5px solid rgba(255,255,255,0.1);border-radius:2px;background:transparent;font-family:var(--font);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(249,249,249,0.3);cursor:pointer;">Skip for now</button>
+      </div>
+      <div style="margin-top:16px;font-size:10px;color:rgba(249,249,249,0.2);line-height:1.7;">
+        Gemma 4 is optional. All core dashboard features work without it.<br>
+        Connection is local-only — no data leaves your device via this channel.
+      </div>
+    </div>
+  `;
+  document.body.appendChild(el);
+
+  document.getElementById('gemma-test-btn')?.addEventListener('click', async () => {
+    const ep = document.getElementById('gemma-endpoint-input').value.trim();
+    const status = document.getElementById('gemma-test-status');
+    status.textContent = 'Testing connection...';
+    status.style.color = 'rgba(249,249,249,0.4)';
+    try {
+      const res = await fetch(ep + '/api/tags', { signal: AbortSignal.timeout(3000) });
+      if (res.ok) {
+        const d = await res.json();
+        const models = (d.models||[]).map(m=>m.name).join(', ') || 'No models loaded';
+        status.textContent = `✓ Connected — Models: ${models}`;
+        status.style.color = '#7a9f6a';
+      } else {
+        status.textContent = `✗ Server responded with HTTP ${res.status}`;
+        status.style.color = '#e05c5c';
+      }
+    } catch(e) {
+      status.textContent = `✗ Could not reach ${ep} — is Ollama running?`;
+      status.style.color = '#e05c5c';
+    }
+  });
+
+  document.getElementById('gemma-save-btn')?.addEventListener('click', () => {
+    const ep = document.getElementById('gemma-endpoint-input').value.trim();
+    setGemmaEndpoint(ep || 'http://localhost:11434');
+    el.style.display = 'none';
+    showToast('Gemma 4 endpoint saved');
+    g.gemmaEndpoint = ep || 'http://localhost:11434';
+  });
+
+  document.getElementById('gemma-skip-btn')?.addEventListener('click', () => {
+    setGemmaEndpoint('SKIPPED');
+    el.style.display = 'none';
+  });
+})();
+
+// ═══════════════════════════════════════════════════════════════
+//  WORK DESK — PER-USER PROJECTS (keyed by accessKey, max 5)
+// ═══════════════════════════════════════════════════════════════
+
+const WD_MAX_PROJECTS = 5;
+
+// Storage key is scoped to the operator's access key so projects
+// are never visible to other operators on the same device
+function wdStorageKey(suffix) {
+  const userKey = (g.accessKey || 'anon').replace(/[^a-zA-Z0-9]/g,'_');
+  return `otap_wd_${userKey}_${suffix}`;
+}
+
+function wdGetProjects() {
+  try { return JSON.parse(localStorage.getItem(wdStorageKey('projects')) || '[]'); } catch(e) { return []; }
+}
+
+function wdSaveProjects(projects) {
+  try { localStorage.setItem(wdStorageKey('projects'), JSON.stringify(projects)); } catch(e) {}
+}
+
+function wdGetActiveProject() {
+  try { return localStorage.getItem(wdStorageKey('active_project')) || null; } catch(e) { return null; }
+}
+
+function wdSetActiveProject(name) {
+  try { localStorage.setItem(wdStorageKey('active_project'), name); } catch(e) {}
+}
+
+// Save current work to active project (or 'default' if none selected)
+function wdSaveToProject() {
+  const active = wdGetActiveProject() || 'default';
+  let projects = wdGetProjects();
+
+  // Ensure project exists
+  if (!projects.find(p => p.name === active)) {
+    projects.push({ name: active, created: Date.now(), updated: Date.now() });
+    if (projects.length > WD_MAX_PROJECTS) projects = projects.slice(-WD_MAX_PROJECTS);
+    wdSaveProjects(projects);
+  }
+
+  // Save mindmap and sheet data under this project
+  const data = {
+    mindmap: { nodes: g_mm.nodes, edges: g_mm.edges, nextId: g_mm.nextId },
+    sheet:   { headers: g_sheetHeaders, data: g_sheetData.slice(0, 1000) },
+    updated: Date.now(),
+  };
+  try {
+    localStorage.setItem(wdStorageKey(`proj_${active}`), JSON.stringify(data));
+    // Update project timestamp
+    projects = projects.map(p => p.name === active ? { ...p, updated: Date.now() } : p);
+    wdSaveProjects(projects);
+  } catch(e) { showToast('Save failed — storage full?'); }
+}
+
+// Load a named project
+function wdLoadProject(name) {
+  try {
+    const raw = localStorage.getItem(wdStorageKey(`proj_${name}`));
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (d.mindmap) {
+      g_mm.nodes  = d.mindmap.nodes  || [];
+      g_mm.edges  = d.mindmap.edges  || [];
+      g_mm.nextId = d.mindmap.nextId || 1;
+      drawMindmap();
+    }
+    if (d.sheet) {
+      g_sheetHeaders = d.sheet.headers || [];
+      g_sheetData    = d.sheet.data    || [];
+      renderSheet();
+      if (g_sheetData.length) populateChartSelectors();
+    }
+    wdSetActiveProject(name);
+  } catch(e) { console.warn('[WD] Load project failed', e.message); }
+}
+
+// Delete a project
+function wdDeleteProject(name) {
+  let projects = wdGetProjects().filter(p => p.name !== name);
+  wdSaveProjects(projects);
+  try { localStorage.removeItem(wdStorageKey(`proj_${name}`)); } catch(e) {}
+  if (wdGetActiveProject() === name) {
+    const next = projects[0]?.name || null;
+    wdSetActiveProject(next || 'default');
+    if (next) wdLoadProject(next);
+    else { g_mm.nodes=[]; g_mm.edges=[]; g_mm.nextId=1; g_sheetHeaders=[]; g_sheetData=[]; drawMindmap(); renderSheet(); }
+  }
+}
+
+// Create a new project
+function wdNewProject(name) {
+  if (!name) return;
+  let projects = wdGetProjects();
+  if (projects.find(p => p.name === name)) { showToast('Project already exists'); return; }
+  if (projects.length >= WD_MAX_PROJECTS) { showToast(`Max ${WD_MAX_PROJECTS} projects reached — delete one first`); return; }
+  projects.push({ name, created: Date.now(), updated: Date.now() });
+  wdSaveProjects(projects);
+  wdSetActiveProject(name);
+  // Start fresh
+  g_mm.nodes=[]; g_mm.edges=[]; g_mm.nextId=1;
+  g_sheetHeaders=[]; g_sheetData=[];
+  drawMindmap(); renderSheet();
+  showToast(`Project "${name}" created`);
+  renderProjectList();
+}
+
+// Render the project list in the panel
+function renderProjectList() {
+  const list = document.getElementById('wd-project-list');
+  if (!list) return;
+  const projects = wdGetProjects();
+  const active = wdGetActiveProject() || 'default';
+  list.innerHTML = '';
+
+  if (!projects.length) {
+    list.innerHTML = '<div style="font-size:11px;color:rgba(249,249,249,0.2);padding:6px 0;letter-spacing:0.06em;">No saved projects yet. Type a name below and click + New.</div>';
+    return;
+  }
+
+  for (const proj of projects) {
+    const isActive = proj.name === active;
+    const updated = proj.updated ? new Date(proj.updated).toLocaleDateString('en-GB', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+    const row = document.createElement('div');
+    row.style.cssText = `display:flex;align-items:center;gap:8px;padding:8px 12px;background:${isActive?'rgba(var(--accent-rgb),0.08)':'rgba(255,255,255,0.03)'};border:0.5px solid ${isActive?'var(--accent)':'rgba(255,255,255,0.08)'};border-radius:2px;`;
+    row.innerHTML = `
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;color:${isActive?'var(--accent)':'#f9f9f9'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(proj.name)}</div>
+        <div style="font-size:9px;color:rgba(249,249,249,0.2);margin-top:2px;letter-spacing:0.06em;">Updated ${updated}</div>
+      </div>
+      ${isActive ? '<span style="font-size:9px;color:var(--accent);letter-spacing:0.12em;text-transform:uppercase;border:0.5px solid var(--accent);padding:1px 5px;border-radius:2px;">Active</span>' : ''}
+      <button class="proj-open" data-name="${esc(proj.name)}" style="padding:4px 10px;border:0.5px solid rgba(255,255,255,0.15);border-radius:2px;background:transparent;font-family:var(--font);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(249,249,249,0.4);cursor:pointer;${isActive?'display:none':''}">Open</button>
+      <button class="proj-del" data-name="${esc(proj.name)}" style="padding:4px 8px;border:0.5px solid rgba(224,92,92,0.3);border-radius:2px;background:transparent;font-family:var(--font);font-size:9px;color:rgba(224,92,92,0.6);cursor:pointer;">✕</button>
+    `;
+    list.appendChild(row);
+  }
+
+  // Wire open/delete buttons
+  list.querySelectorAll('.proj-open').forEach(btn => {
+    btn.addEventListener('click', () => {
+      wdLoadProject(btn.dataset.name);
+      document.getElementById('wd-projects-panel').style.display = 'none';
+      showToast(`Opened "${btn.dataset.name}"`);
+      renderProjectList();
+    });
+  });
+  list.querySelectorAll('.proj-del').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (confirm(`Delete project "${btn.dataset.name}"? This cannot be undone.`)) {
+        wdDeleteProject(btn.dataset.name);
+        renderProjectList();
+        showToast(`Deleted "${btn.dataset.name}"`);
+      }
+    });
+  });
+}
+
+// Wire tutorial and project buttons
+(function wireWdExtras() {
+  // Tutorial
+  const tutBtn   = document.getElementById('wd-tutorial-btn');
+  const tutClose = document.getElementById('wd-tutorial-close');
+  const tutOverlay = document.getElementById('wd-tutorial-overlay');
+
+  tutBtn?.addEventListener('click', () => {
+    if (tutOverlay) tutOverlay.style.display = 'block';
+  });
+  tutClose?.addEventListener('click', () => {
+    if (tutOverlay) tutOverlay.style.display = 'none';
+  });
+
+  // Projects panel
+  const projBtn   = document.getElementById('wd-projects-btn');
+  const projClose = document.getElementById('wd-projects-close');
+  const projPanel = document.getElementById('wd-projects-panel');
+  const newInput  = document.getElementById('wd-new-project-name');
+  const newBtn    = document.getElementById('wd-new-project-btn');
+
+  projBtn?.addEventListener('click', () => {
+    renderProjectList();
+    if (projPanel) projPanel.style.display = 'flex';
+  });
+  projClose?.addEventListener('click', () => {
+    if (projPanel) projPanel.style.display = 'none';
+  });
+  newBtn?.addEventListener('click', () => {
+    const name = newInput?.value.trim();
+    if (name) { wdNewProject(name); newInput.value = ''; renderProjectList(); }
+  });
+  newInput?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') newBtn?.click();
+  });
+})();
+
+// Override saveMindmap / saveSheetData to go through project system
+function saveMindmap() {
+  wdSaveToProject();
+}
+
+function saveSheetData() {
+  wdSaveToProject();
+}
+
+// Override loadMindmap / loadSheetData to load from active project
+function loadMindmap() {
+  const active = wdGetActiveProject();
+  if (active) { wdLoadProject(active); return; }
+  // No project yet — check for legacy data
+  try {
+    const raw = localStorage.getItem(wdStorageKey('mindmap_legacy') ) ||
+                localStorage.getItem('otap_mindmap');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    g_mm.nodes = d.nodes || [];
+    g_mm.edges = d.edges || [];
+    g_mm.nextId = d.nextId || 1;
+    drawMindmap();
+  } catch(e) {}
+}
+
+function loadSheetData() {
+  const active = wdGetActiveProject();
+  if (active) { return; } // already loaded by loadMindmap via wdLoadProject
+  try {
+    const raw = localStorage.getItem('otap_sheet');
+    if (!raw) { renderSheet(); return; }
+    const d = JSON.parse(raw);
+    g_sheetHeaders = d.headers || [];
+    g_sheetData    = d.data    || [];
+    renderSheet();
+    if (g_sheetData.length) populateChartSelectors();
+  } catch(e) { renderSheet(); }
+}
+
 // ── BOOT ──────────────────────────────────────────────────────────
 loadPrefs();
 // Restore pin colour toggle UI
@@ -5335,6 +5832,8 @@ if (g.pinColourMode === 'source-type') {
 }
 // Initialise OSINT key statuses
 updateOsintKeyStatuses();
+// Ensure Gemma endpoint state is loaded
+g.gemmaEndpoint = getGemmaEndpoint() !== 'SKIPPED' ? getGemmaEndpoint() : '';
 console.log('[OTAP] Phase 4 Dashboard ready — https://otapinitiative-lab.github.io/otap-dashboard/');
 </script>
 </body>
