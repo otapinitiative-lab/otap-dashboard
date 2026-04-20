@@ -9,8 +9,8 @@
 /* ═══════════════════════════════════════════════════════════════
    OTAP DASHBOARD — Phase 4 Web Build
    Hosted: https://otapinitiative-lab.github.io/otap-dashboard/
-   Phase 4: Work Desk (mind map, spreadsheet import, charts),
-   Market ticker on Map Mode (live indices + top movers)
+   Phase 5: Server persistence, Google export, shared notes,
+   map search, notifications, mobile layout, activity feed
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── SITE CSS VARIABLE SYSTEM (mirrors Squarespace custom CSS) ── */
@@ -2498,6 +2498,358 @@ html, body {
   letter-spacing:0.06em; line-height:1.8; padding:4px 0;
 }
 
+/* ═══════════════════════════════
+   PHASE 5 — PRODUCTION FEATURES
+   ═══════════════════════════════ */
+
+/* ── MAP SEARCH BAR ── */
+#map-search-wrap {
+  position: absolute;
+  top: 12px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: 320px;
+  display: flex;
+  gap: 0;
+}
+
+#map-search-input {
+  flex: 1;
+  background: rgba(0,0,0,0.82);
+  border: 0.5px solid var(--otap-border);
+  border-right: none;
+  border-radius: 2px 0 0 2px;
+  padding: 8px 12px;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--otap-white);
+  outline: none;
+  letter-spacing: 0.04em;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.15s;
+}
+
+#map-search-input:focus { border-color: var(--accent); }
+#map-search-input::placeholder { color: rgba(249,249,249,0.2); }
+
+#map-search-btn {
+  padding: 0 12px;
+  background: rgba(0,0,0,0.82);
+  border: 0.5px solid var(--otap-border);
+  border-left: none;
+  border-radius: 0 2px 2px 0;
+  font-family: var(--font);
+  font-size: 11px;
+  color: var(--accent);
+  cursor: pointer;
+  letter-spacing: 0.1em;
+  transition: background 0.15s;
+  backdrop-filter: blur(8px);
+}
+
+#map-search-btn:hover { background: rgba(var(--accent-rgb),0.12); }
+
+#map-search-results {
+  position: absolute;
+  top: 100%; left: 0; right: 0;
+  background: rgba(0,0,0,0.92);
+  border: 0.5px solid var(--otap-border);
+  border-top: none;
+  border-radius: 0 0 2px 2px;
+  max-height: 200px;
+  overflow-y: auto;
+  display: none;
+  z-index: 1001;
+}
+
+.map-search-result {
+  padding: 8px 12px;
+  font-size: 11px;
+  color: rgba(249,249,249,0.7);
+  cursor: pointer;
+  border-bottom: 0.5px solid rgba(255,255,255,0.05);
+  transition: background 0.1s;
+  letter-spacing: 0.02em;
+}
+
+.map-search-result:last-child { border-bottom: none; }
+.map-search-result:hover { background: rgba(var(--accent-rgb),0.1); color: #fff; }
+.map-search-result .sr-type { font-size: 9px; color: rgba(249,249,249,0.3); letter-spacing: 0.1em; text-transform: uppercase; margin-left: 6px; }
+
+/* ── NOTIFICATION BANNER ── */
+#notif-banner {
+  position: fixed;
+  top: 16px; left: 50%;
+  transform: translateX(-50%) translateY(-80px);
+  background: var(--otap-navy-mid);
+  border: 0.5px solid #e05c5c;
+  border-left: 3px solid #e05c5c;
+  border-radius: 2px;
+  padding: 10px 18px 10px 14px;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--otap-white);
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+  transition: transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+  cursor: pointer;
+  max-width: 480px;
+}
+
+#notif-banner.show { transform: translateX(-50%) translateY(0); }
+#notif-banner-dot { width: 7px; height: 7px; border-radius: 50%; background: #e05c5c; flex-shrink: 0; animation: pulse-accent 1.5s infinite; }
+#notif-banner-text { flex: 1; }
+#notif-banner-dismiss { font-size: 14px; color: rgba(249,249,249,0.3); cursor: pointer; flex-shrink: 0; }
+#notif-banner-dismiss:hover { color: var(--otap-white); }
+
+/* ── ACTIVITY FEED ── */
+.activity-feed-section {
+  flex-shrink: 0;
+  border-top: 0.5px solid var(--otap-border);
+  max-height: 140px;
+  overflow: hidden;
+}
+
+.activity-feed-header {
+  padding: 6px 25px 4px;
+  font-size: 9px;
+  color: rgba(249,249,249,0.2);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.activity-feed-toggle {
+  cursor: pointer;
+  transition: color 0.12s;
+}
+
+.activity-feed-toggle:hover { color: var(--accent); }
+
+.activity-feed-list {
+  overflow-y: auto;
+  max-height: 110px;
+  scrollbar-width: none;
+}
+
+.activity-item {
+  padding: 4px 25px;
+  font-size: 10px;
+  color: rgba(249,249,249,0.3);
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  border-bottom: 0.5px solid rgba(255,255,255,0.03);
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.activity-item:last-child { border-bottom: none; }
+.activity-time { color: rgba(249,249,249,0.15); font-size: 9px; flex-shrink: 0; }
+.activity-user { color: var(--accent); font-size: 10px; }
+.activity-msg { flex: 1; }
+
+/* ── EXPORT PANEL ── */
+#export-panel {
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 100%;
+  background: var(--otap-navy);
+  border-left: 2px solid var(--accent);
+  z-index: 250;
+  display: none;
+  flex-direction: column;
+  padding: 20px 20px 20px 22px;
+  overflow-y: auto;
+}
+
+.export-title {
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+
+.export-section {
+  margin-bottom: 18px;
+  background: var(--otap-navy-mid);
+  border: 0.5px solid var(--otap-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.export-section-header {
+  padding: 10px 14px;
+  font-size: 11px;
+  color: var(--otap-white);
+  letter-spacing: 0.04em;
+  border-bottom: 0.5px solid var(--otap-border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.export-section-icon { font-size: 14px; }
+
+.export-section-body {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.export-desc {
+  font-size: 11px;
+  color: rgba(249,249,249,0.4);
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+}
+
+.export-btn {
+  width: 100%;
+  padding: 9px;
+  background: transparent;
+  border: 0.5px solid var(--accent);
+  border-radius: 2px;
+  font-family: var(--font);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.export-btn:hover:not(:disabled) { background: var(--accent); color: var(--otap-navy); }
+.export-btn:disabled { opacity: 0.35; cursor: default; }
+
+.export-btn.google-docs { border-color: #4285f4; color: #4285f4; }
+.export-btn.google-docs:hover:not(:disabled) { background: #4285f4; color: #fff; }
+
+.export-btn.google-sheets { border-color: #34a853; color: #34a853; }
+.export-btn.google-sheets:hover:not(:disabled) { background: #34a853; color: #fff; }
+
+.export-btn.canva { border-color: #7d2ae8; color: #7d2ae8; }
+.export-btn.canva:hover:not(:disabled) { background: #7d2ae8; color: #fff; }
+
+.export-btn.png { border-color: #c5a267; color: #c5a267; }
+.export-btn.png:hover:not(:disabled) { background: #c5a267; color: var(--otap-navy); }
+
+.export-status {
+  font-size: 10px;
+  color: var(--otap-green);
+  letter-spacing: 0.06em;
+  min-height: 14px;
+}
+
+.export-close {
+  position: absolute;
+  top: 14px; right: 14px;
+  background: transparent;
+  border: 0.5px solid rgba(255,255,255,0.1);
+  border-radius: 2px;
+  color: rgba(249,249,249,0.3);
+  font-size: 14px;
+  width: 24px; height: 24px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font);
+  transition: all 0.12s;
+}
+
+.export-close:hover { color: var(--otap-white); border-color: rgba(255,255,255,0.3); }
+
+/* ── SHARED ANNOTATIONS INDICATOR ── */
+.shared-note-badge {
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--otap-green);
+  border: 0.5px solid rgba(122,159,106,0.4);
+  border-radius: 2px;
+  padding: 1px 5px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 900px) {
+  #screen-map { flex-direction: column; }
+  #sidebar {
+    width: 100% !important;
+    height: 320px;
+    border-left: none;
+    border-top: 2px solid var(--accent);
+    flex-direction: column;
+  }
+  #sidebar::before { width: 100%; height: 2px; }
+  #market-ticker { display: none; }
+  .sb-bottom { padding: 8px 16px; }
+  #map-search-wrap { width: calc(100% - 120px); }
+  #pin-colour-toggle { display: none; }
+  #pin-legend { display: none; }
+}
+
+@media (max-width: 600px) {
+  .sb-title { font-size: 16px; }
+  .wd-tab { padding: 0 10px; font-size: 10px; }
+  .mode-cards { flex-direction: column; }
+  .mode-card { width: 100%; min-height: auto; }
+  .region-grid { grid-template-columns: 1fr; }
+  .region-col-divider { display: none; }
+}
+
+/* ── MULTI-TARGET OSINT ── */
+.osint-queue-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid var(--otap-border);
+  border-radius: 2px;
+  margin-bottom: 4px;
+}
+
+.osint-queue-label {
+  flex: 1;
+  font-size: 11px;
+  color: var(--otap-white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.osint-queue-status {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.osint-queue-status.pending { color: rgba(249,249,249,0.3); border: 0.5px solid rgba(255,255,255,0.1); }
+.osint-queue-status.running { color: var(--accent); border: 0.5px solid var(--accent-dim); animation: osint-pulse 1s infinite; }
+.osint-queue-status.done    { color: var(--otap-green); border: 0.5px solid rgba(122,159,106,0.3); }
+.osint-queue-status.error   { color: #e05c5c; border: 0.5px solid rgba(224,92,92,0.3); }
+
+.osint-queue-rm {
+  font-size: 11px;
+  color: rgba(224,92,92,0.5);
+  cursor: pointer;
+  padding: 2px 4px;
+  transition: color 0.12s;
+}
+
+.osint-queue-rm:hover { color: #e05c5c; }
+
 </style>
 </head>
 <body>
@@ -2588,6 +2940,13 @@ html, body {
     <div id="leaflet-map"></div>
     <div id="coord-hover"></div>
 
+    <!-- Map Search -->
+    <div id="map-search-wrap">
+      <input id="map-search-input" type="text" placeholder="Search location, country, city...">
+      <button id="map-search-btn">Go</button>
+      <div id="map-search-results"></div>
+    </div>
+
     <!-- Pin colour mode toggle -->
     <div id="pin-colour-toggle">&#9679; Colour: Severity</div>
 
@@ -2632,6 +2991,7 @@ html, body {
       <div class="sb-title-row">
         <div class="sb-title">OTAP Dashboard</div>
         <div class="sb-wc">
+          <div class="wc-btn" id="btn-export-map" title="Export" style="font-size:10px;">&#8599;</div>
           <div class="wc-btn" id="btn-theme-map" title="Cycle theme" style="font-size:10px;letter-spacing:0.06em;">◐</div>
           <div class="wc-btn" id="btn-mode-switch" title="Mode select" style="font-size:10px;letter-spacing:0.06em;">⊞</div>
           <div class="wc-btn" id="btn-fullscreen" title="Fullscreen">&#9633;</div>
@@ -2718,6 +3078,15 @@ html, body {
     </div>
 
     <!-- Bottom -->
+    <!-- Activity Feed -->
+    <div class="activity-feed-section" id="activity-feed-section">
+      <div class="activity-feed-header">
+        <span>Recent Activity</span>
+        <span class="activity-feed-toggle" id="activity-toggle">&#9650;</span>
+      </div>
+      <div class="activity-feed-list" id="activity-feed-list"></div>
+    </div>
+
     <div class="sb-bottom">
       <button class="bottom-btn mode-btn" id="btn-mode">&#62; Theatre</button>
       <button class="bottom-btn ctry-btn" id="btn-countries">Countries</button>
@@ -2953,6 +3322,8 @@ html, body {
 
     <div class="osint-sb-bottom">
       <button class="osint-run-btn" id="osint-run-btn">Run OSINT</button>
+      <button class="osint-keys-btn" id="osint-queue-btn" style="border-color:rgba(var(--accent-rgb),0.3);color:var(--accent);">&#43; Add to Queue</button>
+      <div id="osint-queue-list" style="margin-top:6px;display:none;max-height:120px;overflow-y:auto;"></div>
       <button class="osint-keys-btn" id="osint-keys-btn">⚙ Manage API Keys</button>
       <button class="osint-back-btn" id="osint-back-btn">← Back to Mode Select</button>
     </div>
@@ -3155,6 +3526,9 @@ html, body {
 
 <!-- Toast -->
 <div id="toast"></div>
+
+<!-- Notification banner -->
+<div id="notif-banner"><div id="notif-banner-dot"></div><div id="notif-banner-text">New high-severity intel detected</div><div id="notif-banner-dismiss">&#215;</div></div>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -3375,9 +3749,12 @@ function enterDashboard() {
   updateModeLabel();
   loadExtDashboards();
   if (!g.leafletMap) initMap();
-  startSync();
+  startSync().then(() => {
+    initNotifications();
+    fetchSharedNotes();
+    fetchSharedActivity();
+  });
   initTicker();
-  // Show Gemma popup on first visit if not configured
   const ep = getGemmaEndpoint();
   if (!ep) setTimeout(showGemmaPopup, 1200);
   g.gemmaEndpoint = ep !== 'SKIPPED' ? ep : '';
@@ -3936,6 +4313,7 @@ async function startSync() {
     } catch(e2){ console.warn('[SYNC] Local fallback failed'); }
   }
   g.isSyncing=false; setSyncUI(false);
+  if (typeof addActivity === 'function') addActivity(g.userName || 'OPR', 'Intel sync complete');
 }
 
 function setSyncUI(syncing) {
@@ -4147,7 +4525,11 @@ function updateOsintKeyStatuses() {
 
   if (runBtn) {
     runBtn.disabled = true;
-    runBtn.addEventListener('click', () => { if (!g_osintRunning) runOsint(); });
+    runBtn.addEventListener('click', async () => {
+      if (g_osintRunning) return;
+      if (g_osintQueue && g_osintQueue.length > 0) await runOsintQueue();
+      else await runOsint();
+    });
   }
 })();
 const OSINT_CARDS = [
@@ -4225,10 +4607,7 @@ function osintHasAnyInput() {
 
 document.getElementById('osint-run-btn').disabled = true;
 
-document.getElementById('osint-run-btn').addEventListener('click', () => {
-  if (g_osintRunning) return;
-  runOsint();
-});
+// osint-run-btn is wired in wireOsint() above — queue handling added in Phase 5 below
 
 async function runOsint() {
   g_osintRunning = true;
@@ -4236,24 +4615,20 @@ async function runOsint() {
   const btn = document.getElementById('osint-run-btn');
   btn.classList.add('running'); btn.textContent = 'Running...';
 
-  // Build subject label
   const subject = inputs.email || inputs.name || inputs.ip || inputs.phone || inputs.domain || 'Unknown Subject';
   document.getElementById('osint-subject-label').textContent = subject;
   document.getElementById('osint-meta-label').textContent =
     `Query started ${new Date().toUTCString()} · OTAP OSINT ENGINE v1.0`;
 
-  // Clear previous results
   const resultsEl = document.getElementById('osint-results');
   resultsEl.innerHTML = '';
 
-  // Render all cards in loading state
   for (const card of OSINT_CARDS) {
     const shouldRun = cardShouldRun(card, inputs);
     const hasKeys = card.keyRequired.every(k => osintHasKey(k));
     renderOsintCard(card, shouldRun && hasKeys ? 'loading' : (hasKeys ? 'idle' : 'no-key'), null, inputs);
   }
 
-  // Run each card concurrently
   const promises = OSINT_CARDS.map(card => runOsintCard(card, inputs));
   await Promise.allSettled(promises);
 
@@ -4261,6 +4636,10 @@ async function runOsint() {
   btn.textContent = 'Run OSINT';
   g_osintRunning = false;
   showToast('OSINT query complete');
+
+  // Capture for export and activity
+  g_lastOsintRun = { subject, inputs, timestamp: new Date().toISOString(), operator: g.userName, results: {} };
+  if (typeof addActivity === 'function') addActivity(g.userName, `OSINT query: ${subject}`);
 }
 
 function cardShouldRun(card, inputs) {
@@ -4604,73 +4983,77 @@ function showToast(msg) {
 //  PHASE 4 — MARKET TICKER (Map Mode only)
 // ═══════════════════════════════════════════════════════════════
 
-// Yahoo Finance quote data via allorigins CORS proxy (no API key needed)
+// ── MARKET TICKER — sourced from Google Finance via Apps Script ──
+// Google Finance data is 15-20 min delayed (same as Yahoo free tier).
+// Crypto (BTC, ETH) is fetched live from CoinGecko via Apps Script.
+// No CORS proxies. No third-party dependencies. No API keys in browser.
+
+// Display-side instrument list — mirrors Apps Script TICKER_INSTRUMENTS
+// Used only for rendering order/labels; actual data comes from server.
 const TICKER_SYMBOLS = [
-  // Major indices
-  { sym:'^GSPC',  name:'S&P 500',    section:'Indices' },
-  { sym:'^DJI',   name:'Dow Jones',  section:null },
-  { sym:'^IXIC',  name:'NASDAQ',     section:null },
-  { sym:'^FTSE',  name:'FTSE 100',   section:null },
-  { sym:'^GDAXI', name:'DAX',        section:null },
-  { sym:'^FCHI',  name:'CAC 40',     section:null },
-  { sym:'^N225',  name:'Nikkei',     section:null },
-  { sym:'^HSI',   name:'Hang Seng',  section:null },
-  { sym:'^SSEC',  name:'Shanghai',   section:null },
-  // Major companies
-  { sym:'AAPL',  name:'Apple',       section:'Equities' },
-  { sym:'MSFT',  name:'Microsoft',   section:null },
-  { sym:'NVDA',  name:'NVIDIA',      section:null },
-  { sym:'GOOGL', name:'Alphabet',    section:null },
-  { sym:'AMZN',  name:'Amazon',      section:null },
-  { sym:'META',  name:'Meta',        section:null },
-  { sym:'TSLA',  name:'Tesla',       section:null },
-  { sym:'JPM',   name:'JPMorgan',    section:null },
-  { sym:'XOM',   name:'ExxonMobil',  section:null },
-  { sym:'BAC',   name:'Bank of Am.', section:null },
-  // Commodities & FX
-  { sym:'GC=F',  name:'Gold',        section:'Commodities' },
-  { sym:'CL=F',  name:'Crude Oil',   section:null },
-  { sym:'BTC-USD',name:'Bitcoin',    section:null },
-  { sym:'EURUSD=X',name:'EUR/USD',   section:'FX' },
-  { sym:'GBPUSD=X',name:'GBP/USD',  section:null },
+  { sym:'.INX',   name:'S&P 500',    section:'Indices'     },
+  { sym:'.DJI',   name:'Dow Jones',  section:null          },
+  { sym:'.IXIC',  name:'NASDAQ',     section:null          },
+  { sym:'FTSE',   name:'FTSE 100',   section:null          },
+  { sym:'DAX',    name:'DAX',        section:null          },
+  { sym:'CAC',    name:'CAC 40',     section:null          },
+  { sym:'N225',   name:'Nikkei',     section:null          },
+  { sym:'HSI',    name:'Hang Seng',  section:null          },
+  { sym:'AAPL',   name:'Apple',      section:'Equities'    },
+  { sym:'MSFT',   name:'Microsoft',  section:null          },
+  { sym:'NVDA',   name:'NVIDIA',     section:null          },
+  { sym:'GOOGL',  name:'Alphabet',   section:null          },
+  { sym:'AMZN',   name:'Amazon',     section:null          },
+  { sym:'META',   name:'Meta',       section:null          },
+  { sym:'TSLA',   name:'Tesla',      section:null          },
+  { sym:'JPM',    name:'JPMorgan',   section:null          },
+  { sym:'XOM',    name:'ExxonMobil', section:null          },
+  { sym:'BAC',    name:'Bank of Am.',section:null          },
+  { sym:'GC',     name:'Gold',       section:'Commodities' },
+  { sym:'CL',     name:'Crude Oil',  section:null          },
+  { sym:'EURUSD', name:'EUR/USD',    section:'FX'          },
+  { sym:'GBPUSD', name:'GBP/USD',    section:null          },
+  { sym:'USDJPY', name:'USD/JPY',    section:null          },
+  { sym:'BTC',    name:'Bitcoin',    section:'Crypto'      },
+  { sym:'ETH',    name:'Ethereum',   section:null          },
 ];
 
-let g_tickerData = {};
+let g_tickerData   = {};   // { sym: { price, change, pct, name, source } }
 let g_tickerLoaded = false;
 
 async function fetchTickerData() {
-  const syms = TICKER_SYMBOLS.map(s => s.sym).join(',');
-  // Try corsproxy.io as primary, allorigins as fallback
-  const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(syms)}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,shortName`;
-  const proxies = [
-    `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`,
-  ];
+  // Requires a valid access key — ticker is served through our Apps Script
+  if (!g.accessKey) { renderTickerFallback('Login required for market data'); return; }
 
-  for (const proxyUrl of proxies) {
-    try {
-      const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) });
-      if (!res.ok) continue;
-      const data = await res.json();
-      const quotes = data?.quoteResponse?.result || [];
-      if (!quotes.length) continue;
-      for (const q of quotes) {
-        g_tickerData[q.symbol] = {
-          price: q.regularMarketPrice,
-          change: q.regularMarketChange,
-          pct: q.regularMarketChangePercent,
-          name: q.shortName || q.symbol,
-        };
-      }
-      g_tickerLoaded = true;
-      renderTicker();
-      return;
-    } catch(e) {
-      console.warn('[TICKER] Proxy failed:', proxyUrl.slice(0,40), e.message);
+  try {
+    const url = `${APPS_SCRIPT_URL}?key=${encodeURIComponent(g.accessKey)}&action=getTicker`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    // Server returns ordered array — index by sym for quick lookup
+    const items = data.ticker || [];
+    if (!items.length) throw new Error('Empty ticker response');
+
+    for (const item of items) {
+      g_tickerData[item.sym] = {
+        price:  item.price,
+        change: item.change,
+        pct:    item.pct,
+        name:   item.name,
+        source: item.source,
+      };
     }
+
+    g_tickerLoaded = true;
+    renderTicker();
+    console.log(`[TICKER] ${items.length} instruments loaded via Google Finance / CoinGecko`);
+  } catch(e) {
+    console.warn('[TICKER] Apps Script fetch failed:', e.message);
+    renderTickerFallback('Market data unavailable');
   }
-  // Both proxies failed — show static fallback
-  renderTickerFallback();
 }
 
 function renderTicker() {
@@ -4688,55 +5071,47 @@ function renderTicker() {
     const d = g_tickerData[sym.sym];
     if (!d) continue;
 
-    const up = d.change >= 0;
+    const up    = d.change >= 0;
     const arrow = up ? '▲' : '▼';
-    const cls = Math.abs(d.change) < 0.01 ? 'flat' : up ? 'up' : 'down';
+    const cls   = Math.abs(d.change) < 0.001 ? 'flat' : up ? 'up' : 'down';
     const price = formatTickerPrice(d.price, sym.sym);
-    const pct = (up ? '+' : '') + (d.pct || 0).toFixed(2) + '%';
+    const pct   = (up ? '+' : '') + (d.pct || 0).toFixed(2) + '%';
+    // Small source indicator for CoinGecko (live) vs Google Finance (delayed)
+    const liveTag = d.source === 'coingecko'
+      ? '<span style="font-size:8px;color:rgba(122,159,106,0.7);margin-left:2px">LIVE</span>'
+      : '';
 
     html += `<div class="ticker-item">
-      <span class="ticker-sym">${sym.sym.replace('=X','').replace('=F','').replace('^','')}</span>
+      <span class="ticker-sym">${sym.sym}</span>
       <span class="ticker-name">${sym.name}</span>
       <span class="ticker-price">${price}</span>
-      <span class="ticker-chg ${cls}">${arrow} ${pct}</span>
+      <span class="ticker-chg ${cls}">${arrow} ${pct}</span>${liveTag}
     </div>`;
   }
 
-  // Duplicate for seamless loop
   if (html) {
-    track.innerHTML = html + html;
-    // Restart animation with correct width
+    track.innerHTML = html + html; // duplicate for seamless loop
     track.style.animation = 'none';
     requestAnimationFrame(() => {
       track.style.animation = '';
-      // Calibrate speed to content width
       const trackW = track.scrollWidth / 2;
-      const speed = Math.max(40, trackW / 80); // ~80px/sec
+      const speed  = Math.max(40, trackW / 80);
       track.style.animationDuration = speed + 's';
     });
   }
 }
 
-function renderTickerFallback() {
-  // Minimal static data when network unavailable
-  const fallback = [
-    { sym:'S&P 500', name:'', price:'—', pct:'—', cls:'flat' },
-    { sym:'NASDAQ',  name:'', price:'—', pct:'—', cls:'flat' },
-    { sym:'FTSE',    name:'', price:'—', pct:'—', cls:'flat' },
-  ];
+function renderTickerFallback(msg) {
   const track = document.getElementById('ticker-track');
   if (!track) return;
-  let html = fallback.map(f => `<div class="ticker-item">
-    <span class="ticker-sym">${f.sym}</span>
-    <span class="ticker-price">${f.price}</span>
-    <span class="ticker-chg flat">${f.pct}</span>
-  </div>`).join('');
-  track.innerHTML = html + '<div class="ticker-item"><span class="ticker-name" style="color:rgba(249,249,249,0.15)">Market data unavailable</span></div>';
+  track.innerHTML = `<div class="ticker-item"><span class="ticker-name" style="color:rgba(249,249,249,0.2);letter-spacing:0.08em;">${msg || 'Market data unavailable'}</span></div>`;
 }
 
 function formatTickerPrice(price, sym) {
-  if (price === undefined || price === null) return '—';
-  if (sym.includes('=X')) return price.toFixed(4);
+  if (price === undefined || price === null || price === 0) return '—';
+  // FX pairs
+  if (['EURUSD','GBPUSD','USDJPY','USDCHF','AUDUSD'].includes(sym)) return price.toFixed(4);
+  // Large indices / high prices
   if (price > 10000) return price.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
   if (price > 100)   return price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
   return price.toFixed(2);
@@ -4744,8 +5119,9 @@ function formatTickerPrice(price, sym) {
 
 function initTicker() {
   fetchTickerData();
-  // Refresh every 60 seconds
-  setInterval(fetchTickerData, 60000);
+  // Refresh every 90 seconds — Google Finance updates ~1min,
+  // so 90s gives a buffer without hammering the Apps Script quota
+  setInterval(fetchTickerData, 90000);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -4977,21 +5353,7 @@ function hideNodeEdit() {
   g_mm.editingNode = null;
 }
 
-function saveMindmap() {
-  try { localStorage.setItem('otap_mindmap', JSON.stringify({ nodes: g_mm.nodes, edges: g_mm.edges, nextId: g_mm.nextId })); } catch(e) {}
-}
 
-function loadMindmap() {
-  try {
-    const raw = localStorage.getItem('otap_mindmap');
-    if (!raw) return;
-    const d = JSON.parse(raw);
-    g_mm.nodes = d.nodes || [];
-    g_mm.edges = d.edges || [];
-    g_mm.nextId = d.nextId || (g_mm.nodes.length + 1);
-    drawMindmap();
-  } catch(e) {}
-}
 
 // Tool buttons
 document.querySelectorAll('.mm-tool').forEach(btn => {
@@ -5257,21 +5619,7 @@ function wirePasteZone() {
   });
 }
 
-function saveSheetData() {
-  try { localStorage.setItem('otap_sheet', JSON.stringify({ headers: g_sheetHeaders, data: g_sheetData.slice(0,1000) })); } catch(e) {}
-}
 
-function loadSheetData() {
-  try {
-    const raw = localStorage.getItem('otap_sheet');
-    if (!raw) { renderSheet(); wirePasteZone(); return; }
-    const d = JSON.parse(raw);
-    g_sheetHeaders = d.headers || [];
-    g_sheetData = d.data || [];
-    renderSheet();
-    if (g_sheetData.length) populateChartSelectors();
-  } catch(e) { renderSheet(); wirePasteZone(); }
-}
 
 // Global paste listener for CSV
 document.addEventListener('paste', e => {
@@ -5661,30 +6009,6 @@ function wdSetActiveProject(name) {
 }
 
 // Save current work to active project (or 'default' if none selected)
-function wdSaveToProject() {
-  const active = wdGetActiveProject() || 'default';
-  let projects = wdGetProjects();
-
-  // Ensure project exists
-  if (!projects.find(p => p.name === active)) {
-    projects.push({ name: active, created: Date.now(), updated: Date.now() });
-    if (projects.length > WD_MAX_PROJECTS) projects = projects.slice(-WD_MAX_PROJECTS);
-    wdSaveProjects(projects);
-  }
-
-  // Save mindmap and sheet data under this project
-  const data = {
-    mindmap: { nodes: g_mm.nodes, edges: g_mm.edges, nextId: g_mm.nextId },
-    sheet:   { headers: g_sheetHeaders, data: g_sheetData.slice(0, 1000) },
-    updated: Date.now(),
-  };
-  try {
-    localStorage.setItem(wdStorageKey(`proj_${active}`), JSON.stringify(data));
-    // Update project timestamp
-    projects = projects.map(p => p.name === active ? { ...p, updated: Date.now() } : p);
-    wdSaveProjects(projects);
-  } catch(e) { showToast('Save failed — storage full?'); }
-}
 
 // Load a named project
 function wdLoadProject(name) {
@@ -5863,6 +6187,649 @@ function loadSheetData() {
     renderSheet();
     if (g_sheetData.length) populateChartSelectors();
   } catch(e) { renderSheet(); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PHASE 5 — MAP SEARCH
+// ═══════════════════════════════════════════════════════════════
+
+(function wireMapSearch() {
+  const input   = document.getElementById('map-search-input');
+  const btn     = document.getElementById('map-search-btn');
+  const results = document.getElementById('map-search-results');
+  if (!input || !btn) return;
+
+  let debounce = null;
+
+  async function doSearch(q) {
+    if (!q || q.length < 2) { results.style.display = 'none'; return; }
+    try {
+      // First search within current pins
+      const pinMatches = g.allPins.filter(p =>
+        p.city.toLowerCase().includes(q.toLowerCase()) ||
+        p.country.toLowerCase().includes(q.toLowerCase())
+      ).slice(0, 4);
+
+      // Then geocode via Nominatim
+      const geo = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`,
+        { headers: { 'Accept-Language': 'en' }, signal: AbortSignal.timeout(5000) }
+      );
+      const geoData = geo.ok ? await geo.json() : [];
+
+      results.innerHTML = '';
+      let count = 0;
+
+      // Pin matches first
+      for (const pin of pinMatches) {
+        const div = document.createElement('div');
+        div.className = 'map-search-result';
+        div.innerHTML = `${esc(pin.city)}<span class="sr-type">Intel Pin</span>`;
+        div.addEventListener('click', () => {
+          g.leafletMap.setView([pin.lat, pin.lon], 7);
+          results.style.display = 'none';
+          input.value = pin.city;
+          selectPin(pin);
+          showToast(`Jumped to ${pin.city}`);
+        });
+        results.appendChild(div);
+        count++;
+      }
+
+      // Nominatim results
+      for (const place of geoData.slice(0, 5 - count)) {
+        const div = document.createElement('div');
+        div.className = 'map-search-result';
+        const name = place.display_name.split(',').slice(0, 2).join(', ');
+        div.innerHTML = `${esc(name)}<span class="sr-type">${esc(place.type || 'place')}</span>`;
+        div.addEventListener('click', () => {
+          g.leafletMap.setView([parseFloat(place.lat), parseFloat(place.lon)], 8);
+          results.style.display = 'none';
+          input.value = name;
+          showToast(`Jumped to ${name}`);
+        });
+        results.appendChild(div);
+      }
+
+      results.style.display = count || geoData.length ? 'block' : 'none';
+    } catch(e) {
+      console.warn('[SEARCH]', e.message);
+    }
+  }
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounce);
+    debounce = setTimeout(() => doSearch(input.value.trim()), 350);
+  });
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { clearTimeout(debounce); doSearch(input.value.trim()); }
+    if (e.key === 'Escape') { results.style.display = 'none'; input.blur(); }
+  });
+
+  btn.addEventListener('click', () => { clearTimeout(debounce); doSearch(input.value.trim()); });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#map-search-wrap')) results.style.display = 'none';
+  });
+})();
+
+// ═══════════════════════════════════════════════════════════════
+//  PHASE 5 — HIGH-SEVERITY NOTIFICATION POLLING
+// ═══════════════════════════════════════════════════════════════
+
+let g_lastKnownPinKeys = new Set();
+let g_notifPolling = false;
+
+function pinKey(pin) { return `${pin.lat.toFixed(3)},${pin.lon.toFixed(3)}`; }
+
+function initNotifications() {
+  // Snapshot current pins
+  g_lastKnownPinKeys = new Set(g.pins.filter(p => p.maxSeverity >= 4).map(pinKey));
+
+  // Poll every 90 seconds
+  if (!g_notifPolling) {
+    g_notifPolling = true;
+    setInterval(checkForNewThreats, 90000);
+  }
+}
+
+async function checkForNewThreats() {
+  if (g.isSyncing || !g.accessKey) return;
+  try {
+    const res = await fetch(`${APPS_SCRIPT_URL}?key=${encodeURIComponent(g.accessKey)}`,
+      { signal: AbortSignal.timeout(10000) });
+    const text = await res.text();
+    if (text.includes('ACCESS DENIED')) return;
+    const data = JSON.parse(text);
+
+    // Parse silently without updating UI
+    const tempReports = [];
+    if (Array.isArray(data.reports)) {
+      for (const item of data.reports) {
+        if (parseInt(item.severity) >= 4) tempReports.push(item);
+      }
+    }
+
+    const newKeys = new Set(
+      tempReports.map(r => `${parseFloat(r.lat).toFixed(3)},${parseFloat(r.lon).toFixed(3)}`)
+    );
+
+    const newThreats = [...newKeys].filter(k => !g_lastKnownPinKeys.has(k));
+
+    if (newThreats.length > 0) {
+      g_lastKnownPinKeys = newKeys;
+      const msg = newThreats.length === 1
+        ? 'New active threat detected — sync to update map'
+        : `${newThreats.length} new active threats detected — sync to update`;
+      showNotifBanner(msg, () => startSync());
+      addActivity('SYSTEM', `${newThreats.length} new threat(s) detected`);
+    }
+  } catch(e) { /* silent */ }
+}
+
+function showNotifBanner(msg, onClick) {
+  const banner = document.getElementById('notif-banner');
+  const text   = document.getElementById('notif-banner-text');
+  if (!banner) return;
+  text.textContent = msg;
+  banner.classList.add('show');
+  banner.onclick = () => { banner.classList.remove('show'); if (onClick) onClick(); };
+  document.getElementById('notif-banner-dismiss').onclick = e => {
+    e.stopPropagation(); banner.classList.remove('show');
+  };
+  setTimeout(() => banner.classList.remove('show'), 8000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PHASE 5 — ACTIVITY FEED
+// ═══════════════════════════════════════════════════════════════
+
+const g_activity = [];
+
+function addActivity(user, msg) {
+  const now = new Date();
+  const time = now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+  g_activity.unshift({ user, msg, time });
+  if (g_activity.length > 30) g_activity.pop();
+  renderActivityFeed();
+  // Persist to server for shared visibility
+  persistActivity(user, msg);
+}
+
+function renderActivityFeed() {
+  const list = document.getElementById('activity-feed-list');
+  if (!list) return;
+  list.innerHTML = g_activity.slice(0, 8).map(a => `
+    <div class="activity-item">
+      <span class="activity-time">${a.time}</span>
+      <span class="activity-user">${esc(a.user)}</span>
+      <span class="activity-msg">${esc(a.msg)}</span>
+    </div>
+  `).join('');
+}
+
+function persistActivity(user, msg) {
+  if (!g.accessKey) return;
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ key: g.accessKey, action: 'logActivity', user, msg }),
+  }).catch(() => {});
+}
+
+async function fetchSharedActivity() {
+  if (!g.accessKey) return;
+  try {
+    const res = await fetch(`${APPS_SCRIPT_URL}?key=${encodeURIComponent(g.accessKey)}&action=getActivity`,
+      { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    if (Array.isArray(data.activity)) {
+      // Merge server activity with local
+      for (const a of data.activity) {
+        if (!g_activity.find(x => x.time === a.time && x.user === a.user && x.msg === a.msg)) {
+          g_activity.push(a);
+        }
+      }
+      g_activity.sort((a, b) => b.time.localeCompare(a.time));
+      if (g_activity.length > 30) g_activity.splice(30);
+      renderActivityFeed();
+    }
+  } catch(e) {}
+}
+
+// Toggle activity feed collapse
+document.getElementById('activity-toggle')?.addEventListener('click', () => {
+  const list = document.getElementById('activity-feed-list');
+  const toggle = document.getElementById('activity-toggle');
+  if (!list) return;
+  const collapsed = list.style.display === 'none';
+  list.style.display = collapsed ? 'block' : 'none';
+  if (toggle) toggle.textContent = collapsed ? '▲' : '▼';
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  PHASE 5 — SHARED ANNOTATIONS (server-backed operator notes)
+// ═══════════════════════════════════════════════════════════════
+
+const g_sharedNotes = {};  // { "lat,lon": { text, author, ts } }
+
+async function fetchSharedNotes() {
+  if (!g.accessKey) return;
+  try {
+    const res = await fetch(`${APPS_SCRIPT_URL}?key=${encodeURIComponent(g.accessKey)}&action=getNotes`,
+      { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    if (data.notes && typeof data.notes === 'object') {
+      Object.assign(g_sharedNotes, data.notes);
+    }
+  } catch(e) {}
+}
+
+async function saveSharedNote(lat, lon, text) {
+  if (!g.accessKey) return;
+  const key = `${parseFloat(lat).toFixed(4)},${parseFloat(lon).toFixed(4)}`;
+  g_sharedNotes[key] = { text, author: g.userName, ts: Date.now() };
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        key: g.accessKey, action: 'saveNote',
+        noteKey: key, text, author: g.userName,
+      }),
+    });
+    addActivity(g.userName, `Added note on ${g.selectedPin?.city || key}`);
+  } catch(e) {}
+}
+
+function getSharedNote(lat, lon) {
+  const key = `${parseFloat(lat).toFixed(4)},${parseFloat(lon).toFixed(4)}`;
+  return g_sharedNotes[key] || null;
+}
+
+// Override op-notes-save to also persist to server
+document.getElementById('op-notes-save')?.addEventListener('click', () => {
+  if (!g.selectedPin) return;
+  const noteKey = pinNoteKey(g.selectedPin);
+  const val = document.getElementById('op-notes-input')?.value.trim();
+  if (val) {
+    g.operatorNotes[noteKey] = val;
+    saveSharedNote(g.selectedPin.lat, g.selectedPin.lon, val);
+  } else {
+    delete g.operatorNotes[noteKey];
+  }
+  savePrefs();
+  const savedLabel = document.getElementById('op-notes-saved');
+  const display = document.getElementById('op-notes-display');
+  if (val) { display.textContent = val; display.style.display = 'block'; }
+  else { display.style.display = 'none'; }
+  if (savedLabel) { savedLabel.classList.add('show'); setTimeout(() => savedLabel.classList.remove('show'), 2000); }
+  showToast('Note saved & shared');
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  PHASE 5 — EXPORT ENGINE
+// ═══════════════════════════════════════════════════════════════
+
+// Wire export panel open/close
+document.getElementById('btn-export-map')?.addEventListener('click', () => {
+  const panel = document.getElementById('export-panel');
+  if (panel) panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+});
+document.getElementById('export-close-btn')?.addEventListener('click', () => {
+  const panel = document.getElementById('export-panel');
+  if (panel) panel.style.display = 'none';
+});
+
+function setExportStatus(id, msg, ok) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.textContent = msg;
+    el.style.color = ok ? 'var(--otap-green)' : '#e05c5c';
+    if (ok) setTimeout(() => { el.textContent = ''; }, 4000);
+  }
+}
+
+// ── Map PNG export ────────────────────────────────────────────
+document.getElementById('export-map-png')?.addEventListener('click', exportMapPng);
+
+async function exportMapPng() {
+  const statusEl = document.getElementById('export-report-status');
+  if (statusEl) statusEl.textContent = 'Capturing map...';
+
+  try {
+    // Use html2canvas via CDN to capture the map area
+    if (!window.html2canvas) {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    }
+    const mapEl = document.getElementById('map-area');
+    const canvas = await window.html2canvas(mapEl, {
+      useCORS: true, allowTaint: true,
+      backgroundColor: '#0a0f14',
+      scale: window.devicePixelRatio || 1,
+    });
+    const link = document.createElement('a');
+    link.download = `OTAP_Map_${new Date().toISOString().slice(0,10)}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    setExportStatus('export-report-status', '✓ Map exported as PNG', true);
+    addActivity(g.userName, 'Exported map as PNG');
+  } catch(e) {
+    setExportStatus('export-report-status', 'Export failed: ' + e.message, false);
+  }
+}
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
+// ── Google Docs — Intelligence Report ────────────────────────
+document.getElementById('export-report-docs')?.addEventListener('click', exportToGoogleDocs);
+
+async function exportToGoogleDocs() {
+  setExportStatus('export-report-status', 'Building report...', true);
+  const pins = g.pins.slice(0, 50); // cap for Doc size
+  const now = new Date().toUTCString();
+
+  // Build report content as structured data for Apps Script to create Doc
+  const reportData = {
+    title: `OTAP Intelligence Brief — ${new Date().toLocaleDateString('en-GB')}`,
+    generated: now,
+    operator: g.userName,
+    region: (['GLOBAL','EUROPE','MIDDLE EAST','INDO-PACIFIC','AFRICA','AMERICAS','ARCTIC'][g.selectedRegionIdx] || 'GLOBAL'),
+    threatCount: pins.filter(p => p.maxSeverity >= 4).length,
+    totalPins: pins.length,
+    pins: pins.map(p => ({
+      city: p.city,
+      country: p.country,
+      severity: p.maxSeverity,
+      type: getPinType(p),
+      headlines: p.headlines?.slice(0, 2) || [],
+      sources: p.sources.slice(0, 5).map(s => ({
+        name: s.outletName, factuality: s.factuality, url: s.url,
+      })),
+      note: g.operatorNotes[pinNoteKey(p)] || getSharedNote(p.lat, p.lon)?.text || '',
+    })),
+  };
+
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ key: g.accessKey, action: 'createDoc', report: reportData }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.open(data.url, '_blank', 'noopener');
+      setExportStatus('export-report-status', '✓ Report opened in Google Docs', true);
+      addActivity(g.userName, `Exported intel report to Google Docs`);
+    } else {
+      setExportStatus('export-report-status', data.error || 'Failed to create Doc', false);
+    }
+  } catch(e) {
+    setExportStatus('export-report-status', 'Error: ' + e.message, false);
+  }
+}
+
+// ── Google Sheets — Pin data ──────────────────────────────────
+document.getElementById('export-pins-sheets')?.addEventListener('click', exportPinsToSheets);
+
+async function exportPinsToSheets() {
+  setExportStatus('export-data-status', 'Pushing to Sheets...', true);
+  const rows = [
+    ['City','Country','Severity','Type','Headlines','Sources','Operator Note','Lat','Lon'],
+    ...g.pins.map(p => [
+      p.city, p.country, p.maxSeverity, getPinType(p),
+      (p.headlines||[]).join(' | '),
+      p.sources.map(s=>s.outletName).join(', '),
+      g.operatorNotes[pinNoteKey(p)] || '',
+      p.lat, p.lon,
+    ]),
+  ];
+
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ key: g.accessKey, action: 'createSheet', title: `OTAP Pins ${new Date().toLocaleDateString('en-GB')}`, rows }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.open(data.url, '_blank', 'noopener');
+      setExportStatus('export-data-status', '✓ Opened in Google Sheets', true);
+      addActivity(g.userName, `Exported ${g.pins.length} pins to Google Sheets`);
+    } else {
+      setExportStatus('export-data-status', data.error || 'Failed', false);
+    }
+  } catch(e) {
+    setExportStatus('export-data-status', 'Error: ' + e.message, false);
+  }
+}
+
+// ── Google Sheets — Chart data ────────────────────────────────
+document.getElementById('export-chart-sheets')?.addEventListener('click', () => {
+  if (!g_sheetHeaders.length) {
+    setExportStatus('export-data-status', 'No chart data — import data in Work Desk first', false); return;
+  }
+  const rows = [g_sheetHeaders, ...g_sheetData.slice(0, 1000)];
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ key: g.accessKey, action: 'createSheet',
+      title: `OTAP WorkDesk Data ${new Date().toLocaleDateString('en-GB')}`, rows }),
+  }).then(r => r.json()).then(data => {
+    if (data.url) {
+      window.open(data.url, '_blank', 'noopener');
+      setExportStatus('export-data-status', '✓ Chart data in Google Sheets', true);
+      addActivity(g.userName, 'Exported Work Desk data to Google Sheets');
+    } else setExportStatus('export-data-status', data.error || 'Failed', false);
+  }).catch(e => setExportStatus('export-data-status', e.message, false));
+});
+
+// ── Canva CSV export ──────────────────────────────────────────
+document.getElementById('export-canva')?.addEventListener('click', () => {
+  const rows = [
+    ['City','Country','Severity','Type','Primary Source','Headline'],
+    ...g.pins.map(p => [
+      p.city, p.country, p.maxSeverity, getPinType(p),
+      p.sources[0]?.outletName || '',
+      (p.headlines||[])[0] || '',
+    ]),
+  ];
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `OTAP_Canva_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  setExportStatus('export-data-status', '✓ CSV downloaded — import into Canva', true);
+  addActivity(g.userName, 'Downloaded CSV for Canva');
+});
+
+// ── OSINT export ──────────────────────────────────────────────
+let g_lastOsintRun = null; // stored after each OSINT run
+
+document.getElementById('export-osint-docs')?.addEventListener('click', async () => {
+  if (!g_lastOsintRun) {
+    setExportStatus('export-osint-status', 'Run an OSINT query first', false); return;
+  }
+  setExportStatus('export-osint-status', 'Creating OSINT report...', true);
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ key: g.accessKey, action: 'createOsintDoc', osint: g_lastOsintRun }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.open(data.url, '_blank', 'noopener');
+      setExportStatus('export-osint-status', '✓ OSINT report in Google Docs', true);
+      addActivity(g.userName, 'Exported OSINT run to Google Docs');
+    } else setExportStatus('export-osint-status', data.error || 'Failed', false);
+  } catch(e) { setExportStatus('export-osint-status', e.message, false); }
+});
+
+document.getElementById('export-osint-sheets')?.addEventListener('click', async () => {
+  if (!g_lastOsintRun) {
+    setExportStatus('export-osint-status', 'Run an OSINT query first', false); return;
+  }
+  const run = g_lastOsintRun;
+  const rows = [['API','Status','Field','Value']];
+  for (const [api, result] of Object.entries(run.results || {})) {
+    if (result && typeof result === 'object') {
+      for (const [k, v] of Object.entries(result)) {
+        rows.push([api, run.status?.[api] || '', k, String(v).slice(0, 500)]);
+      }
+    }
+  }
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ key: g.accessKey, action: 'createSheet',
+        title: `OSINT ${run.subject || 'Run'} ${new Date().toLocaleDateString('en-GB')}`, rows }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.open(data.url, '_blank', 'noopener');
+      setExportStatus('export-osint-status', '✓ OSINT data in Google Sheets', true);
+    } else setExportStatus('export-osint-status', data.error || 'Failed', false);
+  } catch(e) { setExportStatus('export-osint-status', e.message, false); }
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  PHASE 5 — MULTI-TARGET OSINT QUEUE
+// ═══════════════════════════════════════════════════════════════
+
+const g_osintQueue = [];
+
+document.getElementById('osint-queue-btn')?.addEventListener('click', () => {
+  const inputs = osintGetInputs();
+  const label = inputs.email || inputs.name || inputs.ip || inputs.phone || inputs.domain;
+  if (!label) { showToast('Enter at least one field to queue'); return; }
+  if (g_osintQueue.find(q => q.label === label)) { showToast('Already in queue'); return; }
+  if (g_osintQueue.length >= 10) { showToast('Queue full (max 10)'); return; }
+
+  g_osintQueue.push({ label, inputs: {...inputs}, status: 'pending', data: null });
+  renderOsintQueue();
+  showToast(`"${label}" added to queue`);
+
+  // Clear inputs for next target
+  ['osint-email','osint-ip','osint-phone','osint-name','osint-domain'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('osint-run-btn').disabled = true;
+});
+
+function renderOsintQueue() {
+  const list = document.getElementById('osint-queue-list');
+  if (!list) return;
+  if (!g_osintQueue.length) { list.style.display = 'none'; return; }
+  list.style.display = 'block';
+  list.innerHTML = g_osintQueue.map((q, i) => `
+    <div class="osint-queue-item">
+      <div class="osint-queue-label" title="${esc(q.label)}">${esc(q.label)}</div>
+      <div class="osint-queue-status ${q.status}">${q.status}</div>
+      ${q.status === 'pending' ? `<div class="osint-queue-rm" data-idx="${i}">&#215;</div>` : ''}
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.osint-queue-rm').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      g_osintQueue.splice(idx, 1);
+      renderOsintQueue();
+    });
+  });
+}
+
+// Override osint-run-btn to handle queue
+// osint-run-btn queue/single dispatch handled in wireOsint() above
+
+async function runOsintQueue() {
+  g_osintRunning = true;
+  const btn = document.getElementById('osint-run-btn');
+  if (btn) { btn.classList.add('running'); btn.textContent = 'Running queue...'; }
+
+  const allResults = {};
+
+  for (let i = 0; i < g_osintQueue.length; i++) {
+    const item = g_osintQueue[i];
+    item.status = 'running';
+    renderOsintQueue();
+
+    // Run OSINT for this target
+    document.getElementById('osint-subject-label').textContent = item.label;
+    const resultsEl = document.getElementById('osint-results');
+    resultsEl.innerHTML = '';
+    document.getElementById('osint-idle').style.display = 'none';
+
+    const promises = OSINT_CARDS.map(card => runOsintCard(card, item.inputs));
+    await Promise.allSettled(promises);
+
+    item.status = 'done';
+    item.data = { inputs: item.inputs };
+    renderOsintQueue();
+    allResults[item.label] = item;
+  }
+
+  // Store last run for export
+  g_lastOsintRun = {
+    subject: g_osintQueue.map(q => q.label).join(', '),
+    results: allResults,
+    timestamp: new Date().toISOString(),
+    operator: g.userName,
+  };
+
+  if (btn) { btn.classList.remove('running'); btn.textContent = 'Run OSINT'; }
+  g_osintRunning = false;
+  showToast(`Queue complete — ${g_osintQueue.length} targets processed`);
+  addActivity(g.userName, `OSINT queue: ${g_osintQueue.length} targets`);
+  g_osintQueue.length = 0;
+  renderOsintQueue();
+}
+
+// Capture result from single run — patched into original runOsint above via post-run hook
+
+// ═══════════════════════════════════════════════════════════════
+//  PHASE 5 — SERVER-SIDE PERSISTENCE HOOKS
+// ═══════════════════════════════════════════════════════════════
+// These call Apps Script actions. The Apps Script handles
+// creating/reading Drive files keyed by operator access key.
+
+async function serverSaveProject(projectName, mindmap, sheet) {
+  if (!g.accessKey) return;
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        key: g.accessKey, action: 'saveProject',
+        projectName, mindmap, sheet,
+      }),
+    });
+  } catch(e) { console.warn('[PERSIST]', e.message); }
+}
+
+async function serverLoadProjects() {
+  if (!g.accessKey) return null;
+  try {
+    const res = await fetch(
+      `${APPS_SCRIPT_URL}?key=${encodeURIComponent(g.accessKey)}&action=getProjects`,
+      { signal: AbortSignal.timeout(8000) }
+    );
+    const data = await res.json();
+    return data.projects || null;
+  } catch(e) { return null; }
+}
+
+// Augment wdSaveToProject to also persist to server
+const _origWdSave = wdSaveToProject;
+function wdSaveToProject() {
+  _origWdSave();
+  const active = wdGetActiveProject() || 'default';
+  serverSaveProject(active,
+    { nodes: g_mm.nodes, edges: g_mm.edges, nextId: g_mm.nextId },
+    { headers: g_sheetHeaders, data: g_sheetData.slice(0, 500) }
+  );
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────
