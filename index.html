@@ -3858,7 +3858,11 @@ function getPinsFromReports() {
   const now = Math.floor(Date.now()/1000);
   const pins = [];
   for (const r of g.reports) {
-    const anyLive = !r.sources.length || r.sources.some(s=>!s.expiresAt||s.expiresAt>now);
+    // A source is live if: it has no expiry set (scraper data),
+    // or its expiry is in the future.
+    // expiresAt === 0 means "no expiry set" — always show.
+    const anyLive = !r.sources.length ||
+      r.sources.some(s => !s.expiresAt || s.expiresAt === 0 || s.expiresAt > now);
     if (!anyLive) continue;
     let match = pins.find(p=>Math.abs(p.lat-r.lat)<0.001&&Math.abs(p.lon-r.lon)<0.001);
     if (!match) {
@@ -3872,7 +3876,8 @@ function getPinsFromReports() {
       if (r.headline && !match.headlines.includes(r.headline)) match.headlines.push(r.headline);
     }
     for (const s of r.sources) {
-      if (s.expiresAt&&s.expiresAt<=now) continue;
+      // expiresAt === 0 means no expiry set (scraper-sourced) — always include
+      if (s.expiresAt && s.expiresAt !== 0 && s.expiresAt <= now) continue;
       if (!match.sources.find(e=>e.outletName===s.outletName)) match.sources.push(s);
     }
   }
@@ -5022,7 +5027,6 @@ let g_tickerData   = {};   // { sym: { price, change, pct, name, source } }
 let g_tickerLoaded = false;
 
 async function fetchTickerData() {
-  // Requires a valid access key — ticker is served through our Apps Script
   if (!g.accessKey) { renderTickerFallback('Login required for market data'); return; }
 
   try {
@@ -5031,9 +5035,16 @@ async function fetchTickerData() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
 
     const data = await res.json();
+
+    // Detect stale deployment — old versions return "Unknown action"
+    if (data.error && data.error.includes('Unknown action')) {
+      renderTickerFallback('Redeploy Apps Script to enable ticker');
+      console.warn('[TICKER] Apps Script needs redeployment — getTicker action not found');
+      return;
+    }
+
     if (data.error) throw new Error(data.error);
 
-    // Server returns ordered array — index by sym for quick lookup
     const items = data.ticker || [];
     if (!items.length) throw new Error('Empty ticker response');
 
