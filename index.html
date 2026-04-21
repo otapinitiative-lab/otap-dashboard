@@ -4288,34 +4288,37 @@ async function startSync() {
       const text=await res.text();
       if(text.includes('ACCESS DENIED')) throw new Error('Access denied');
       data=JSON.parse(text);
+      console.log(`[SYNC] Apps Script returned ${data.report_count ?? data.reports?.length ?? '?'} reports for ${data.user} [${data.clearance}]`);
     } else {
       data=await (await fetch('dashboard.json')).json();
+      console.log('[SYNC] Using dashboard.json fallback (no access key)');
     }
     parseReports(data);
 
-    // Admin OSINT key relay — if server returns osint_keys, store them
-    // (only if operator hasn't set their own keys locally already)
     if (data.osint_keys && typeof data.osint_keys === 'object') {
       for (const [k, v] of Object.entries(data.osint_keys)) {
-        if (v && !osintGetKey(k)) {  // don't overwrite operator's own keys
-          osintSetKey(k, v);
-        }
+        if (v && !osintGetKey(k)) osintSetKey(k, v);
       }
       updateOsintKeyStatuses();
     }
 
     g.allPins=getPinsFromReports();
+    console.log(`[SYNC] ${g.allPins.length} pins after expiry filter (${g.reports.length} reports total)`);
     g.allCountries=[...new Set(g.allPins.filter(p=>p.country&&p.country!=='MARITIME').map(p=>p.country))].sort();
     rebuildPins(); renderCountriesTab(); updateCtryStatus(); renderIntelTab();
+
   } catch(err) {
-    console.error('[SYNC]',err.message);
+    console.error('[SYNC] Apps Script failed:', err.message, '— falling back to dashboard.json');
+    const status=document.getElementById('sb-status');
+    if(status) status.textContent='Sync error: ' + err.message.slice(0,40);
     try {
       const data=await (await fetch('dashboard.json')).json();
       parseReports(data);
       g.allPins=getPinsFromReports();
       g.allCountries=[...new Set(g.allPins.filter(p=>p.country&&p.country!=='MARITIME').map(p=>p.country))].sort();
       rebuildPins(); renderCountriesTab(); updateCtryStatus();
-    } catch(e2){ console.warn('[SYNC] Local fallback failed'); }
+      console.log(`[SYNC] Fallback loaded ${g.allPins.length} pins from dashboard.json`);
+    } catch(e2){ console.warn('[SYNC] Local fallback also failed:', e2.message); }
   }
   g.isSyncing=false; setSyncUI(false);
   if (typeof addActivity === 'function') addActivity(g.userName || 'OPR', 'Intel sync complete');
