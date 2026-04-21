@@ -3635,22 +3635,109 @@ function cycleTheme() {
 }
 
 // ── PREFS ─────────────────────────────────────────────────────────
+// ── STORAGE LAYER — iframe-safe key persistence ───────────────────
+// Edge + Squarespace iframe blocks localStorage via Tracking Prevention.
+// Strategy (tried in order on load, saved to all available on write):
+//   1. URL hash  (#k=KEY) — never blocked, survives refresh
+//   2. sessionStorage — not blocked in iframes by Edge
+//   3. localStorage — works on direct GitHub Pages access
+
+function storageGet(key) {
+  // 1. Check URL hash first
+  try {
+    const hash = window.location.hash;
+    if (hash) {
+      const params = new URLSearchParams(hash.slice(1));
+      const val = params.get(key);
+      if (val) return val;
+    }
+  } catch(e) {}
+  // 2. sessionStorage
+  try {
+    const val = sessionStorage.getItem(key);
+    if (val) return val;
+  } catch(e) {}
+  // 3. localStorage
+  try {
+    const val = localStorage.getItem(key);
+    if (val) return val;
+  } catch(e) {}
+  return null;
+}
+
+function storageSet(key, value) {
+  // Write to sessionStorage and localStorage (hash is set separately for key)
+  try { sessionStorage.setItem(key, value); } catch(e) {}
+  try { localStorage.setItem(key, value); } catch(e) {}
+}
+
+function storageRemove(key) {
+  try { sessionStorage.removeItem(key); } catch(e) {}
+  try { localStorage.removeItem(key); } catch(e) {}
+}
+
+// Encode the access key into the URL hash so it survives iframe refresh
+function setKeyInHash(key) {
+  try {
+    if (!key) return;
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    params.set('k', key);
+    // Replace hash without triggering a page reload
+    history.replaceState(null, '', '#' + params.toString());
+  } catch(e) {}
+}
+
+function getKeyFromHash() {
+  try {
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    return params.get('k') || '';
+  } catch(e) { return ''; }
+}
+
+function clearKeyFromHash() {
+  try {
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    params.delete('k');
+    const remaining = params.toString();
+    history.replaceState(null, '', remaining ? '#' + remaining : window.location.pathname + window.location.search);
+  } catch(e) {}
+}
+
 function loadPrefs() {
-  // 1. Inherit site's active theme from localStorage (otap_user_pref)
-  const siteTheme = localStorage.getItem('otap_user_pref');
+  // Theme — try all storage layers
+  const siteTheme = storageGet('otap_user_pref');
   if (siteTheme && SITE_THEME_MAP[siteTheme]) applyThemeClass(siteTheme);
 
-  // 2. Load dashboard-specific prefs
+  // Access key — check hash first (most reliable in iframe), then stored prefs
+  const hashKey = getKeyFromHash();
+  if (hashKey) {
+    g.accessKey = hashKey;
+    g.rememberMe = true;
+    const keyInput = document.getElementById('key-input');
+    if (keyInput) keyInput.value = hashKey;
+    updateLoginBtn();
+    const check = document.getElementById('remember-check');
+    if (check) check.classList.add('checked');
+  }
+
+  // Load remaining prefs from storage
   try {
-    const raw = localStorage.getItem('otap_dash_prefs');
+    const raw = storageGet('otap_dash_prefs');
     if (!raw) return;
     const p = JSON.parse(raw);
-    if (p.rememberMe && p.key) {
+
+    // Only load key from prefs if hash didn't already supply it
+    if (!hashKey && p.rememberMe && p.key) {
       g.accessKey = p.key; g.rememberMe = true;
-      document.getElementById('key-input').value = p.key;
+      const keyInput = document.getElementById('key-input');
+      if (keyInput) keyInput.value = p.key;
       updateLoginBtn();
-      document.getElementById('remember-check').classList.add('checked');
+      const check = document.getElementById('remember-check');
+      if (check) check.classList.add('checked');
+      // Persist to hash for future refreshes
+      setKeyInHash(p.key);
     }
+
     if (p.theme && SITE_THEME_MAP[p.theme]) applyThemeClass(p.theme);
     if (p.pinColourMode) g.pinColourMode = p.pinColourMode;
     if (p.operatorNotes) g.operatorNotes = p.operatorNotes;
@@ -3658,16 +3745,22 @@ function loadPrefs() {
 }
 
 function savePrefs() {
-  try {
-    localStorage.setItem('otap_dash_prefs', JSON.stringify({
-      rememberMe: g.rememberMe,
-      key: g.rememberMe ? g.accessKey : '',
-      theme: g.currentThemeCls,
-      pinColourMode: g.pinColourMode,
-      operatorNotes: g.operatorNotes,
-    }));
-    localStorage.setItem('otap_user_pref', g.currentThemeCls);
-  } catch(e) {}
+  const prefs = JSON.stringify({
+    rememberMe: g.rememberMe,
+    key: g.rememberMe ? g.accessKey : '',
+    theme: g.currentThemeCls,
+    pinColourMode: g.pinColourMode,
+    operatorNotes: g.operatorNotes,
+  });
+  storageSet('otap_dash_prefs', prefs);
+  storageSet('otap_user_pref', g.currentThemeCls);
+
+  // Always keep hash in sync when rememberMe is on
+  if (g.rememberMe && g.accessKey) {
+    setKeyInHash(g.accessKey);
+  } else {
+    clearKeyFromHash();
+  }
 }
 
 // ── SCREEN SWITCHING ──────────────────────────────────────────────
@@ -3698,6 +3791,9 @@ function doLogin() {
   const key = document.getElementById('key-input').value.trim();
   if (!key) return;
   g.accessKey = key;
+  // Always write to hash — works in all iframe contexts including
+  // Edge + Squarespace where localStorage is blocked by tracking prevention
+  setKeyInHash(key);
   savePrefs();
   showScreen('mode');
 }
@@ -4227,13 +4323,13 @@ document.getElementById('ctry-clear-all').addEventListener('click',()=>{
 
 // ── EXT DASHBOARDS ────────────────────────────────────────────────
 function loadExtDashboards() {
-  try { g.extDashboards=JSON.parse(localStorage.getItem('otap_ext_dashboards'))||EXT_DEFAULTS; }
+  try { g.extDashboards=JSON.parse(storageGet('otap_ext_dashboards'))||EXT_DEFAULTS; }
   catch(e){ g.extDashboards=[...EXT_DEFAULTS]; }
   renderExtTab();
 }
 
 function saveExtDashboards() {
-  try{ localStorage.setItem('otap_ext_dashboards',JSON.stringify(g.extDashboards)); }catch(e){}
+  try{ storageSet('otap_ext_dashboards',JSON.stringify(g.extDashboards)); }catch(e){}
 }
 
 function renderExtTab() {
@@ -4436,13 +4532,13 @@ function esc(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;')
 const OSINT_KEY_NAMES = ['hibp','shodan','hunter','numverify','google_api','google_cx'];
 
 function osintGetKey(name) {
-  try { return localStorage.getItem('otap_osint_' + name) || ''; } catch(e) { return ''; }
+  try { return storageGet('otap_osint_' + name) || ''; } catch(e) { return ''; }
 }
 
 function osintSetKey(name, val) {
   try {
-    if (val) localStorage.setItem('otap_osint_' + name, val);
-    else localStorage.removeItem('otap_osint_' + name);
+    if (val) storageSet('otap_osint_' + name, val);
+    else storageRemove('otap_osint_' + name);
   } catch(e) {}
 }
 
@@ -5661,7 +5757,7 @@ document.getElementById('wd-clear-data-btn')?.addEventListener('click', () => {
   if (confirm('Clear all imported data?')) {
     g_sheetHeaders = []; g_sheetData = [];
     renderSheet(); clearChart();
-    localStorage.removeItem('otap_sheet');
+    storageRemove('otap_sheet');
     showToast('Data cleared');
   }
 });
@@ -5907,11 +6003,11 @@ function applyAdminUI() {
 const GEMMA_KEY = 'otap_gemma_endpoint';
 
 function getGemmaEndpoint() {
-  try { return localStorage.getItem(GEMMA_KEY) || ''; } catch(e) { return ''; }
+  try { return storageGet(GEMMA_KEY) || ''; } catch(e) { return ''; }
 }
 
 function setGemmaEndpoint(url) {
-  try { if(url) localStorage.setItem(GEMMA_KEY, url); else localStorage.removeItem(GEMMA_KEY); } catch(e) {}
+  try { if(url) storageSet(GEMMA_KEY, url); else storageRemove(GEMMA_KEY); } catch(e) {}
 }
 
 function showGemmaPopup() {
@@ -6007,19 +6103,19 @@ function wdStorageKey(suffix) {
 }
 
 function wdGetProjects() {
-  try { return JSON.parse(localStorage.getItem(wdStorageKey('projects')) || '[]'); } catch(e) { return []; }
+  try { return JSON.parse(storageGet(wdStorageKey('projects')) || '[]'); } catch(e) { return []; }
 }
 
 function wdSaveProjects(projects) {
-  try { localStorage.setItem(wdStorageKey('projects'), JSON.stringify(projects)); } catch(e) {}
+  try { storageSet(wdStorageKey('projects'), JSON.stringify(projects)); } catch(e) {}
 }
 
 function wdGetActiveProject() {
-  try { return localStorage.getItem(wdStorageKey('active_project')) || null; } catch(e) { return null; }
+  try { return storageGet(wdStorageKey('active_project')) || null; } catch(e) { return null; }
 }
 
 function wdSetActiveProject(name) {
-  try { localStorage.setItem(wdStorageKey('active_project'), name); } catch(e) {}
+  try { storageSet(wdStorageKey('active_project'), name); } catch(e) {}
 }
 
 // Save current work to active project (or 'default' if none selected)
@@ -6027,7 +6123,7 @@ function wdSetActiveProject(name) {
 // Load a named project
 function wdLoadProject(name) {
   try {
-    const raw = localStorage.getItem(wdStorageKey(`proj_${name}`));
+    const raw = storageGet(wdStorageKey(`proj_${name}`));
     if (!raw) return;
     const d = JSON.parse(raw);
     if (d.mindmap) {
@@ -6050,7 +6146,7 @@ function wdLoadProject(name) {
 function wdDeleteProject(name) {
   let projects = wdGetProjects().filter(p => p.name !== name);
   wdSaveProjects(projects);
-  try { localStorage.removeItem(wdStorageKey(`proj_${name}`)); } catch(e) {}
+  try { storageRemove(wdStorageKey(`proj_${name}`)); } catch(e) {}
   if (wdGetActiveProject() === name) {
     const next = projects[0]?.name || null;
     wdSetActiveProject(next || 'default');
@@ -6178,8 +6274,8 @@ function loadMindmap() {
   if (active) { wdLoadProject(active); return; }
   // No project yet — check for legacy data
   try {
-    const raw = localStorage.getItem(wdStorageKey('mindmap_legacy') ) ||
-                localStorage.getItem('otap_mindmap');
+    const raw = storageGet(wdStorageKey('mindmap_legacy')) ||
+                storageGet('otap_mindmap');
     if (!raw) return;
     const d = JSON.parse(raw);
     g_mm.nodes = d.nodes || [];
@@ -6193,7 +6289,7 @@ function loadSheetData() {
   const active = wdGetActiveProject();
   if (active) { return; } // already loaded by loadMindmap via wdLoadProject
   try {
-    const raw = localStorage.getItem('otap_sheet');
+    const raw = storageGet('otap_sheet');
     if (!raw) { renderSheet(); return; }
     const d = JSON.parse(raw);
     g_sheetHeaders = d.headers || [];
